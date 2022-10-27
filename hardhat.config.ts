@@ -42,15 +42,15 @@ const config: HardhatUserConfig = {
     //   gas: 2100000,
     //   gasPrice: 8000000000,
     // },
-    // goerli: {
-    //   url: process.env.GEORLI_URL || "",
-    //   accounts: [
-    //     process.env.PRIVATE_KEY || "",
-    //     process.env.TEST_WALLET_PRIVATE_KEY || "",
-    //   ],
-    //   gas: 2100000,
-    //   gasPrice: 8000000000,
-    // },
+    goerli: {
+      url: process.env.GOERLI_URL || "",
+      accounts: [
+        process.env.PRIVATE_KEY || "",
+        process.env.TEST_WALLET_PRIVATE_KEY || "",
+      ],
+      gas: 2100000,
+      gasPrice: 8000000000,
+    },
     // ropsten: {
     //   url: process.env.ROPSTEN_URL || "",
     //   accounts: [
@@ -58,13 +58,13 @@ const config: HardhatUserConfig = {
     //     process.env.TEST_WALLET_PRIVATE_KEY || "",
     //   ],
     // },
-    bscTestnet: {
-      url: process.env.BSC_TESTNET_URL || "",
-      accounts: [
-        process.env.PRIVATE_KEY || "",
-        process.env.TEST_WALLET_PRIVATE_KEY || "",
-      ],
-    },
+    // bscTestnet: {
+    //   url: process.env.BSC_TESTNET_URL || "",
+    //   accounts: [
+    //     process.env.PRIVATE_KEY || "",
+    //     process.env.TEST_WALLET_PRIVATE_KEY || "",
+    //   ],
+    // },
     // mainnet: {
     //   url: process.env.ETHEREUM_URL || "",
     //   accounts: [
@@ -103,7 +103,7 @@ const config: HardhatUserConfig = {
       // @ts-ignore
       mainnet: process.env.ETHERSCAN_API_KEY,
       // @ts-ignore
-      goerli: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.GOERLI_API_KEY,
       // @ts-ignore
       bsc: process.env.BSCSCAN_API_KEY,
       // @ts-ignore
