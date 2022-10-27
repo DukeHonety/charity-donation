@@ -1,26 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.6;
+import "hardhat/console.sol";
 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-
-// interface IERC20 {
-//     function totalSupply() external view returns (uint);
-//     function balanceOf(address account) external view returns (uint);
-//     function transfer(address recipient, uint amount) external returns (bool);
-//     function allowance(address owner, address spender) external view returns (uint);
-//     function approve(address spender, uint amount) external returns (bool);
-//     function transferFrom(
-//         address sender,
-//         address recipient,
-//         uint amount
-//     ) external returns (bool);
-//     event Transfer(address indexed from, address indexed to, uint value);
-//     event Approval(address indexed owner, address indexed spender, uint value);
-// }
 
 contract DDAContract is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -37,6 +23,7 @@ contract DDAContract is AccessControl {
         string title;
         string country;
         string location;
+        string _type;
     }
     struct FundRaiserType {
         address _address;
@@ -46,11 +33,11 @@ contract DDAContract is AccessControl {
         string country;
         string location;
         string story;
+        string _type;
     }
-    IERC20 usdt = IERC20(address(0x528726caB4AaB84607Ff2A21a79e31d17D188693));
-    mapping(address => DonaterType) internal donaters;
-    mapping(address => CharityType) internal charities;
-    mapping(address => FundRaiserType) internal fundRaisers;
+    mapping(address => DonaterType) public donaters;
+    mapping(address => CharityType) public charities;
+    mapping(address => FundRaiserType) public fundRaisers;
     event Donate(
         address indexed _from,
         address indexed _to,
@@ -62,7 +49,7 @@ contract DDAContract is AccessControl {
         string title,
         string country,
         string location,
-        string indexed type,
+        string indexed _type,
         uint256 timestamp
     );
     event RemoveCharity(
@@ -77,7 +64,7 @@ contract DDAContract is AccessControl {
         string country,
         string location,
         string story,
-        string indexed type,
+        string indexed _type,
         uint256 timestamp
     );
     event RemoveFundRaiser(
@@ -107,9 +94,13 @@ contract DDAContract is AccessControl {
     constructor(address _admin) public {
         _setupRole(ADMIN_ROLE, _admin);
     }
-    function donate(address _to, uint256 _amount) external {
+    /**
+     * Donation function
+     */
+    function donate(address _to, address _currency, uint256 _amount) external {
+        IERC20 currency = IERC20(_currency);
         require ( _amount > 0, "Deposit amount error");
-        require (usdt.balanceOf(msg.sender) < _amount, "Not enough tokens!");
+        require (currency.balanceOf(msg.sender) < _amount, "Not enough tokens!");
         require (donaters[msg.sender]._address != address(0) , "Donater's address isn't registered!");
         require (fundRaisers[_to]._address != address(0) , "FundRaiser's address isn't registered!");
         uint256 ratio = 10;
@@ -129,11 +120,14 @@ contract DDAContract is AccessControl {
         uint256 _buyAmount = _amount * ratio / 1000;
 
         // fundRaisers[_to].fund += _transferAmount;
+        currency.approve(address(this), _amount);
+        currency.transferFrom(msg.sender, _to, _transferAmount);
         emit Donate(msg.sender, _to, _transferAmount, block.timestamp);
+
     }
 
     function createDonater(string memory name) external hasExistAddress{
-        require(bytes(title).length > 0 && bytes(country).length > 0 && bytes(location).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
+        require( bytes(name).length > 0, 'There is empty string passed as parameter');
 
         addressIdxs.add(msg.sender);
         donaters[msg.sender] = DonaterType({
@@ -149,8 +143,8 @@ contract DDAContract is AccessControl {
         donaters[msg.sender]._address = address(0);
         emit RemoveDonater(msg.sender, block.timestamp);
     }
-    function createCharity(string memory title, string memory country, string memory location, string memory type) external hasExistAddress {
-        require(bytes(title).length > 0 && bytes(country).length > 0 && bytes(location).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
+    function createCharity(string memory title, string memory country, string memory location, string memory _type) external hasExistAddress {
+        require(bytes(title).length > 0 && bytes(country).length > 0 && bytes(location).length > 0 && bytes(_type).length > 0, 'There is empty string passed as parameter');
 
         addressIdxs.add(msg.sender);
         charities[msg.sender] = CharityType({
@@ -158,9 +152,9 @@ contract DDAContract is AccessControl {
             title: title,
             country: country,
             location: location,
-            type: type
+            _type: _type
         });
-        emit CreateCharity(msg.sender, title, country, location, type, block.timestamp);
+        emit CreateCharity(msg.sender, title, country, location, _type, block.timestamp);
     }
     function removeCharity() public {
         require(charities[msg.sender]._address != address(0), 'This address is not exist');
@@ -168,9 +162,9 @@ contract DDAContract is AccessControl {
         charities[msg.sender]._address = address(0);
         emit RemoveCharity(msg.sender, block.timestamp);
     }
-    function createFundRaiser(uint256 goal, string memory name, string memory country, string memory location, string memory story, string memory type) external hasExistAddress {
+    function createFundRaiser(uint256 goal, string memory name, string memory country, string memory location, string memory story, string memory _type) external hasExistAddress {
         require(goal >= 1 ether, 'Raise money could be at least $1');
-        require(bytes(name).length > 0 && bytes(country).length > 0  && bytes(location).length > 0 && bytes(story).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
+        require(bytes(name).length > 0 && bytes(country).length > 0  && bytes(location).length > 0 && bytes(story).length > 0 && bytes(_type).length > 0, 'There is empty string passed as parameter');
 
         addressIdxs.add(msg.sender);
         fundRaisers[msg.sender] = FundRaiserType({
@@ -181,9 +175,9 @@ contract DDAContract is AccessControl {
             country: country,
             location: location,
             story: story,
-            type: type
+            _type: _type
         });
-        emit CreateFundRaiser(msg.sender, goal, 0, name, country, location, story, type, block.timestamp);
+        emit CreateFundRaiser(msg.sender, goal, 0, name, country, location, story, _type, block.timestamp);
     }
     function removeFundRaiser() public {
         require(fundRaisers[msg.sender]._address != address(0), 'This address is not exist');
@@ -192,23 +186,13 @@ contract DDAContract is AccessControl {
         emit RemoveFundRaiser(msg.sender, block.timestamp);
     }
 
-    
-    // function getDonaters() external returns (DonaterType[] memory) {
-    //     return donaters;
+    // function getDonater(address _address) external view returns(DonaterType memory) {
+    //     return donaters[_address];
     // }
-    // function getCharities() external returns (CharityType[] memory) {
-    //     return charities;
+    // function getCharity(address _address) external view returns (CharityType memory) {
+    //     return charities[_address];
     // }
-    // function getFundRaisers() external returns (FundRaiserType[] memory) {
-    //     return fundRaisers;
+    // function getFundRaiser(address _address) external view returns (FundRaiserType memory) {
+    //     return fundRaisers[_address];
     // }
-    function getDonater(address _address) external view returns(DonaterType memory) {
-        return donaters[_address];
-    }
-    function getCharity(address _address) external view returns (CharityType memory) {
-        return charities[_address];
-    }
-    function getFundRaiser(address _address) external view returns (FundRaiserType memory) {
-        return fundRaisers[_address];
-    }
 }

@@ -8,12 +8,14 @@ async function main() {
   let deployer: SignerWithAddress;
   [deployer] = await ethers.getSigners();  //??
 
-  const Token = await hre.ethers.getContractFactory("TUSDT");
-  const OKAPI = await Token.deploy(deployer.address);
-  await OKAPI.deployed();
-
+  console.log("Deploying DDAContract");
+  const Token = await hre.ethers.getContractFactory("DDAContract");
+  const ddAContract = await Token.deploy(deployer.address);
+  await ddAContract.deployed();
+  console.log("Deployer address: ", deployer.address);
+  console.log("DDAContract address: ", ddAContract.address);
   await run("verify:verify", {
-    address: OKAPI.address,
+    address: ddAContract.address,
     constructorArguments: [deployer.address],
   });
   

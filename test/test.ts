@@ -1,26 +1,48 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-
 describe("DDAContract Test network", () => {
   let Token;
-  let ddaToken: Contract,
+  let ddaContract: Contract,
+    tusdtToken: Contract,
     deployer: SignerWithAddress,
     admin: SignerWithAddress;
-  describe("Work doDonation", () => {
-    it("Should deploy the contracts", async () => {
+  describe("Deploying", () => {
+    it("Deployed test currencies", async () => {
+      [deployer] = await ethers.getSigners(); //??
+      console.log("deployer: ", deployer.address);
+      // console.log("admin: ", admin.address);
+      Token = await ethers.getContractFactory("TUSDT");
+      tusdtToken = await Token.deploy(deployer.address);
+      await tusdtToken.deployed();
+      console.log("TUSDT address: ", tusdtToken.address);
+      console.log(
+        "tusdtToken verify: ",
+        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network goerli ${tusdtToken.address} ${deployer.address}`
+      );
+      let tx = await tusdtToken
+        .connect(deployer)
+        .mint(deployer.address, "10000000000000000000000000000");
+      await tx.wait();
+    });
+
+    it("Deployed DDAContract", async () => {
       [deployer] = await ethers.getSigners(); //??
       console.log("deployer: ", deployer.address);
       // console.log("admin: ", admin.address);
       Token = await ethers.getContractFactory("DDAContract");
-      ddaToken = await Token.deploy(deployer.address);
-      await ddaToken.deployed();
-      console.log("ddaToken address: ", ddaToken.address);
+      ddaContract = await Token.deploy(deployer.address);
+      await ddaContract.deployed();
+      console.log("DDAContract address: ", ddaContract.address);
       console.log(
-        "ddaToken verify: ",
-        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaToken.address} ${deployer.address}`
+        "ddaContract verify: ",
+        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
       );
     });
+  });
+  describe("Doing Registers", () => {
+    ddaContract.connect(env.)
+    ddaContract.method.createDonater();
   });
 
   // describe("Deploy", () => {
