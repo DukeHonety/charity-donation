@@ -24,7 +24,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
 contract DDAContract is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
-    EnumerableSet.AddressSet private charityAddressIdx;
+    EnumerableSet.AddressSet private addressIdxs;
 
     bytes32 private ADMIN_ROLE;
     struct DonaterType {
@@ -39,7 +39,7 @@ contract DDAContract is AccessControl {
         string location;
     }
     struct FundRaiserType {
-        address walletAddress;
+        address _address;
         uint256 goal;
         uint256 fund;
         string name;
@@ -55,14 +55,35 @@ contract DDAContract is AccessControl {
     event Donate(
         address indexed _from,
         address indexed _to,
-        uint256 _amount
+        uint256 _amount,
+        uint256 timestamp
     );
-
     event CreateCharity(
+        address indexed _address,
         string title,
         string indexed country,
-        string indexed location
+        string indexed location,
+        uint256 timestamp
     );
+    event RemoveCharity(
+        address indexed _address,
+        uint256 timestamp
+    );
+    event CreateFundRaiser(
+        address indexed _address,
+        uint256 goal,
+        uint256 fund,
+        string indexed name,
+        string indexed country,
+        string indexed location,
+        string story,
+        uint256 timestamp
+    );
+    event RemoveFundRaiser(
+        address indexed _address,
+        uint256 timestamp
+    );
+
     modifier hasAdminRole() {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         _;
@@ -89,39 +110,54 @@ contract DDAContract is AccessControl {
 
         uint256 _transferAmount = _amount * (1000 - ratio) / 1000;
         uint256 _buyAmount = _amount * ratio / 1000;
-        emit Donate(msg.sender, _to, _amount);
+        emit Donate(msg.sender, _to, _amount, block.timestamp);
     }
 
     function createCharity(string title, string country, string location) external {
         require(!charities[msg.sender], 'This address is already exist');
+        require(!fundRaisers[msg.sender], 'This address is already exist');
         require(title != '', 'Charity title is required');
         require(country != '', 'Country is required');
         require(location != '', 'Location is required');
-        charities
-        emit CreateCharity(title, country, location);
-    }
-    // function convertToOkapi(uint daiAmount, uint deadline) public payable {
-    //     address[] memory path = new address[](2);
-    //     path[0] = uniswapRouter.WETH();
-    //     path[1] = daiToken;
 
-    //     uniswapRouter.swapETHForExactTokens.value(msg.value)(daiAmount, path, address(this), deadline);
-        
-    //     // refund leftover ETH to user
-    //     msg.sender.call.value(address(this).balance)("");
-    // }
-    
-    function addCharity(bool type) public{
-        require(!charities[msg.sender], 'The charity address is existed!');
-        charityAddressIdx.add(msg.sender);
-        charities[msg.sender] = CharityType ({
-            walletAddress: msg.sender,
-            type: type,
-            funds: 0
+        addressIdxs.add(msg.sender);
+        charities[msg.sender] = CharityType({
+            _address: msg.sender,
+            title: title,
+            country: country,
+            location: location
         });
+        emit CreateCharity(msg.sender, title, country, location, block.timestamp);
     }
+    function removeCharity() public {
+        require(charities[msg.sender], 'This address is not exist');
+        stakeholders.remove(msg.sender);
+        emit RemoveCharity(msg.sender, block.timestamp);
+    }
+    function createFundRaiser(uint256 goal, string name, string country, string location, string story) external {
+        require(!charities[msg.sender], 'This address is already exist');
+        require(!fundRaisers[msg.sender], 'This address is already exist');
+        require(goal >= 1 ether, 'Raise money could be at least $1');
+        require(name != '', 'Name is required');
+        require(country != '', 'Country is required');
+        require(location != '', 'Location is required');
+        require(story != '', 'Story is required');
 
-    function removeCharity() public{
-        require(!charities[msg.sender], 'The charity address is existed!');
+        addressIdxs.add(msg.sender);
+        fundRaisers[msg.sender] = FundRaiserType({
+            _address: msg.sender,
+            goal: goal,
+            fund: 0,
+            name: name,
+            country: country,
+            location: location,
+            story: story,
+        });
+        emit CreateFundRaiser(msg.sender, goal, fund, country, location, story, block.timestamp);
+    }
+    function removeFundRaiser() public {
+        require(fundRaisers[msg.sender], 'This address is not exist');
+        stakeholders.remove(msg.sender);
+        emit RemoveFundRaiser(msg.sender, block.timestamp);
     }
 }
