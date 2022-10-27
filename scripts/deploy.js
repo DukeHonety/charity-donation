@@ -1,21 +1,20 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Contract } from "ethers";
+import { ethers } from "hardhat";
+
 const hre = require("hardhat");
 
 async function main() {
-  const adminAddress = "0xF5EB5549306b4c05B7D40b91500d3eB440c4576a";
+  let deployer: SignerWithAddress;
+  [deployer] = await ethers.getSigners();  //??
 
-  const Token = await hre.ethers.getContractFactory("OKAPI");
-  const OKAPI = await Token.deploy(adminAddress);
+  const Token = await hre.ethers.getContractFactory("TUSDT");
+  const OKAPI = await Token.deploy(deployer.address);
   await OKAPI.deployed();
 
   await run("verify:verify", {
     address: OKAPI.address,
-    constructorArguments: [adminAddress],
+    constructorArguments: [deployer.address],
   });
   
 }

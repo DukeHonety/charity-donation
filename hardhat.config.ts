@@ -58,13 +58,13 @@ const config: HardhatUserConfig = {
     //     process.env.TEST_WALLET_PRIVATE_KEY || "",
     //   ],
     // },
-    // bscTestnet: {
-    //   url: process.env.BSC_TESTNET_URL || "",
-    //   accounts: [
-    //     process.env.PRIVATE_KEY || "",
-    //     process.env.TEST_WALLET_PRIVATE_KEY || "",
-    //   ],
-    // },
+    bscTestnet: {
+      url: process.env.BSC_TESTNET_URL || "",
+      accounts: [
+        process.env.PRIVATE_KEY || "",
+        process.env.TEST_WALLET_PRIVATE_KEY || "",
+      ],
+    },
     // mainnet: {
     //   url: process.env.ETHEREUM_URL || "",
     //   accounts: [

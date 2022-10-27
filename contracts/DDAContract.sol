@@ -48,10 +48,9 @@ contract DDAContract is AccessControl {
         string story;
     }
     IERC20 usdt = IERC20(address(0x528726caB4AaB84607Ff2A21a79e31d17D188693));
-    mapping(address => DonaterType) private donaters;
-    mapping(address => CharityType) private charities;
-    mapping(address => FundRaiserType) private fundRaisers;
-    
+    mapping(address => DonaterType) internal donaters;
+    mapping(address => CharityType) internal charities;
+    mapping(address => FundRaiserType) internal fundRaisers;
     event Donate(
         address indexed _from,
         address indexed _to,
@@ -61,8 +60,9 @@ contract DDAContract is AccessControl {
     event CreateCharity(
         address indexed _address,
         string title,
-        string indexed country,
-        string indexed location,
+        string country,
+        string location,
+        string indexed type,
         uint256 timestamp
     );
     event RemoveCharity(
@@ -73,19 +73,35 @@ contract DDAContract is AccessControl {
         address indexed _address,
         uint256 goal,
         uint256 fund,
-        string indexed name,
-        string indexed country,
-        string indexed location,
+        string name,
+        string country,
+        string location,
         string story,
+        string indexed type,
         uint256 timestamp
     );
     event RemoveFundRaiser(
         address indexed _address,
         uint256 timestamp
     );
-
+    event CreateDonater(
+        address indexed _address,
+        string name,
+        uint256 timestamp
+    );
+    event RemoveDonater(
+        address indexed _address,
+        uint256 timestamp
+    );
     modifier hasAdminRole() {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
+        _;
+    }
+    modifier hasExistAddress() {
+        require(charities[msg.sender]._address == address(0)
+            && fundRaisers[msg.sender]._address == address(0)
+            && donaters[msg.sender]._address == address(0)
+            , 'This address is already exist');
         _;
     }
     constructor(address _admin) public {
@@ -94,7 +110,8 @@ contract DDAContract is AccessControl {
     function donate(address _to, uint256 _amount) external {
         require ( _amount > 0, "Deposit amount error");
         require (usdt.balanceOf(msg.sender) < _amount, "Not enough tokens!");
-        require (!charityAddresses[msg.sender] , "Charity address is invalid");
+        require (donaters[msg.sender]._address != address(0) , "Donater's address isn't registered!");
+        require (fundRaisers[_to]._address != address(0) , "FundRaiser's address isn't registered!");
         uint256 ratio = 10;
         if (_amount > 250000 ether) {
             ratio = 1;
@@ -110,38 +127,50 @@ contract DDAContract is AccessControl {
 
         uint256 _transferAmount = _amount * (1000 - ratio) / 1000;
         uint256 _buyAmount = _amount * ratio / 1000;
-        emit Donate(msg.sender, _to, _amount, block.timestamp);
+
+        // fundRaisers[_to].fund += _transferAmount;
+        emit Donate(msg.sender, _to, _transferAmount, block.timestamp);
     }
 
-    function createCharity(string title, string country, string location) external {
-        require(!charities[msg.sender], 'This address is already exist');
-        require(!fundRaisers[msg.sender], 'This address is already exist');
-        require(title != '', 'Charity title is required');
-        require(country != '', 'Country is required');
-        require(location != '', 'Location is required');
+    function createDonater(string memory name) external hasExistAddress{
+        require(bytes(title).length > 0 && bytes(country).length > 0 && bytes(location).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
+
+        addressIdxs.add(msg.sender);
+        donaters[msg.sender] = DonaterType({
+            _address: msg.sender,
+            donations: 0,
+            name: name
+        });
+        emit CreateDonater(msg.sender, name, block.timestamp);
+    }
+    function removeDonater() public {
+        require(donaters[msg.sender]._address != address(0), 'This address is not exist');
+        addressIdxs.remove(msg.sender);
+        donaters[msg.sender]._address = address(0);
+        emit RemoveDonater(msg.sender, block.timestamp);
+    }
+    function createCharity(string memory title, string memory country, string memory location, string memory type) external hasExistAddress {
+        require(bytes(title).length > 0 && bytes(country).length > 0 && bytes(location).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
 
         addressIdxs.add(msg.sender);
         charities[msg.sender] = CharityType({
             _address: msg.sender,
             title: title,
             country: country,
-            location: location
+            location: location,
+            type: type
         });
-        emit CreateCharity(msg.sender, title, country, location, block.timestamp);
+        emit CreateCharity(msg.sender, title, country, location, type, block.timestamp);
     }
     function removeCharity() public {
-        require(charities[msg.sender], 'This address is not exist');
-        stakeholders.remove(msg.sender);
+        require(charities[msg.sender]._address != address(0), 'This address is not exist');
+        addressIdxs.remove(msg.sender);        
+        charities[msg.sender]._address = address(0);
         emit RemoveCharity(msg.sender, block.timestamp);
     }
-    function createFundRaiser(uint256 goal, string name, string country, string location, string story) external {
-        require(!charities[msg.sender], 'This address is already exist');
-        require(!fundRaisers[msg.sender], 'This address is already exist');
+    function createFundRaiser(uint256 goal, string memory name, string memory country, string memory location, string memory story, string memory type) external hasExistAddress {
         require(goal >= 1 ether, 'Raise money could be at least $1');
-        require(name != '', 'Name is required');
-        require(country != '', 'Country is required');
-        require(location != '', 'Location is required');
-        require(story != '', 'Story is required');
+        require(bytes(name).length > 0 && bytes(country).length > 0  && bytes(location).length > 0 && bytes(story).length > 0 && bytes(type).length > 0, 'There is empty string passed as parameter');
 
         addressIdxs.add(msg.sender);
         fundRaisers[msg.sender] = FundRaiserType({
@@ -152,12 +181,34 @@ contract DDAContract is AccessControl {
             country: country,
             location: location,
             story: story,
+            type: type
         });
-        emit CreateFundRaiser(msg.sender, goal, fund, country, location, story, block.timestamp);
+        emit CreateFundRaiser(msg.sender, goal, 0, name, country, location, story, type, block.timestamp);
     }
     function removeFundRaiser() public {
-        require(fundRaisers[msg.sender], 'This address is not exist');
-        stakeholders.remove(msg.sender);
+        require(fundRaisers[msg.sender]._address != address(0), 'This address is not exist');
+        addressIdxs.remove(msg.sender);
+        fundRaisers[msg.sender]._address = address(0);
         emit RemoveFundRaiser(msg.sender, block.timestamp);
+    }
+
+    
+    // function getDonaters() external returns (DonaterType[] memory) {
+    //     return donaters;
+    // }
+    // function getCharities() external returns (CharityType[] memory) {
+    //     return charities;
+    // }
+    // function getFundRaisers() external returns (FundRaiserType[] memory) {
+    //     return fundRaisers;
+    // }
+    function getDonater(address _address) external view returns(DonaterType memory) {
+        return donaters[_address];
+    }
+    function getCharity(address _address) external view returns (CharityType memory) {
+        return charities[_address];
+    }
+    function getFundRaiser(address _address) external view returns (FundRaiserType memory) {
+        return fundRaisers[_address];
     }
 }
