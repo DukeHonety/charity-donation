@@ -1,12 +1,13 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
+const { expect } = require("chai");
 import Web3 from "web3";
 
 describe("DDAContract Test network", () => {
   let Token;
   let ddaContract: Contract,
-    tusdtToken: Contract,
+    tUsdtToken: Contract,
     deployer: SignerWithAddress,
     donater1: SignerWithAddress,
     donater2: SignerWithAddress,
@@ -15,7 +16,7 @@ describe("DDAContract Test network", () => {
     charity1: SignerWithAddress;
 
   describe("Deploying", () => {
-    it("Deployed test currencies", async () => {
+    it("Deployed test tokens", async () => {
       [deployer, donater1, donater2, fundRaiser1, fundRaiser2, charity1] = await ethers.getSigners(); //??
       console.log("deployer: ", deployer.address);
 
