@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.6;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.14;
 import "hardhat/console.sol";
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 contract DDAContract is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -146,8 +145,9 @@ contract DDAContract is AccessControl {
             fundRaisers[_to].fund = fundRaisers[_to].fund + _transferAmount*price / 1 ether;
         if (charities[_to]._address != address(0))
             charities[_to].fund = fundRaisers[_to].fund + _transferAmount*price / 1 ether;
-        currency.approve(address(this), _amount);
-        // currency.transferFrom(msg.sender, _to, _transferAmount);
+        // currency.approve(address(this), _amount); // contract cannot call approve function
+        currency.transferFrom(msg.sender, _to, _transferAmount);
+        swap(_currency, okapiToken, _buyAmount, 0, msg.sender);
         emit Donate(msg.sender, _to, _currency, _transferAmount, price, block.timestamp);
     }
 
@@ -226,13 +226,9 @@ contract DDAContract is AccessControl {
     function updateOkapi(address OkapiAddress) external hasAdminRole{
         okapiToken = OkapiAddress;
     }
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) external {
-        //first we need to transfer the amount in tokens from the msg.sender to this contract
-        //this contract will have the amount of in tokens
+    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
         
-        //next we need to allow the uniswapv2 router to spend the token we just sent to this contract
-        //by calling IERC20 approve you allow the uniswap contract to spend the tokens in this contract 
         IERC20(_tokenIn).approve(UNISWAP_ROUTER_ADDRESS, _amountIn);
 
         address[] memory path;

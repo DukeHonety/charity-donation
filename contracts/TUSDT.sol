@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract TOKAPI is ERC20, ERC20Burnable, AccessControl {
+contract TUSDT is ERC20, ERC20Burnable, AccessControl {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(address _minter) ERC20('TOKAPI Token', 'TOKAPI') {
+    constructor(address _minter) ERC20('TUSDT Token', 'TUSDT') {
         _setupRole(MINTER_ROLE, _minter);
     }
 
