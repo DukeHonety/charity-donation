@@ -47,8 +47,7 @@ describe("DDAContract Test network", () => {
         "ddaContract verify: ",
         `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
         );
-      done();
-    }).timeout(100000000);;
+    });
 
   });
   // describe("Doing Registers", () => {
