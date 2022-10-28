@@ -12,6 +12,7 @@ contract DDAContract is AccessControl {
     EnumerableSet.AddressSet private addressIdxs;
     address internal constant UNISWAP_ROUTER_ADDRESS = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     IUniswapV2Router02 public uniswapRouter;
+    
     address public okapiToken = 0x27441e83F4466De5d330d45b701f539064730C7E;
     address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -119,9 +120,9 @@ contract DDAContract is AccessControl {
     /**
      * Donation function
      */
-    function donate(address _to, address _currency, uint256 _amount, uint256 price) external {
+    function donate(address _to, address _currency, uint256 _amount, uint256 _price) external {
         IERC20 currency = IERC20(_currency);
-        require ( _amount > 0, "Deposit amount error");
+        require (_amount > 0, "Deposit amount error");
         require (currency.balanceOf(msg.sender) > _amount, "Not enough tokens!");
         require (donaters[msg.sender]._address != address(0) , "Donater's address isn't registered!");
         require (fundRaisers[_to]._address != address(0) || charities[_to]._address != address(0), "FundRaiser's address isn't registered!");
@@ -142,12 +143,12 @@ contract DDAContract is AccessControl {
         uint256 _transferAmount = _amount * (1000 - ratio) / 1000;
         uint256 _buyAmount = _amount * ratio / 1000;
         if (fundRaisers[_to]._address != address(0))
-            fundRaisers[_to].fund = fundRaisers[_to].fund + _transferAmount*price / 1 ether;
+            fundRaisers[_to].fund = fundRaisers[_to].fund + _transferAmount * price / 1 ether;
         if (charities[_to]._address != address(0))
-            charities[_to].fund = fundRaisers[_to].fund + _transferAmount*price / 1 ether;
+            charities[_to].fund = fundRaisers[_to].fund + _transferAmount * price / 1 ether;
         // currency.approve(address(this), _amount); // contract cannot call approve function
         currency.transferFrom(msg.sender, _to, _transferAmount);
-        swap(_currency, okapiToken, _buyAmount, 0, msg.sender);
+        // swap(_currency, okapiToken, _buyAmount, 0, msg.sender);
         emit Donate(msg.sender, _to, _currency, _transferAmount, price, block.timestamp);
     }
 
@@ -223,30 +224,28 @@ contract DDAContract is AccessControl {
     }
 
     // buy okapi on uniswap
-    function updateOkapi(address OkapiAddress) external hasAdminRole{
-        okapiToken = OkapiAddress;
+    function updateOkapi(address _okapiAddress) external hasAdminRole{
+        okapiToken = _okapiAddress;
     }
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
-        IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
+    // function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
+    //     IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
         
-        IERC20(_tokenIn).approve(UNISWAP_ROUTER_ADDRESS, _amountIn);
+    //     IERC20(_tokenIn).approve(UNISWAP_ROUTER_ADDRESS, _amountIn);
 
-        address[] memory path;
-        // if (_tokenIn == WETH || _tokenOut == WETH) {
-        path = new address[](2);
-        path[0] = _tokenIn;
-        path[1] = _tokenOut;
-        // } else {
-        // path = new address[](3);
-        // path[0] = _tokenIn;
-        // path[1] = WETH;
-        // path[2] = _tokenOut;
-        // }
-        //then we will call swapExactTokensForTokens
-        //for the deadline we will pass in block.timestamp
-        //the deadline is the latest time the trade is valid for
-        IUniswapV2Router02(UNISWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
-    }
+    //     address[] memory path;
+    //     if (_tokenIn == WETH || _tokenOut == WETH) {
+    //         path = new address[](2);
+    //         path[0] = _tokenIn;
+    //         path[1] = _tokenOut;
+    //     } else {
+    //         path = new address[](3);
+    //         path[0] = _tokenIn;
+    //         path[1] = WETH;
+    //         path[2] = _tokenOut;
+    //     }
+    //     // for the deadline we will pass in block.timestamp
+    //     IUniswapV2Router02(UNISWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
+    // }
     
 
 }

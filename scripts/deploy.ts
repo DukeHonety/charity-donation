@@ -1,18 +1,23 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 
-const hre = require("hardhat");
 
 async function main() {
   let deployer: SignerWithAddress;
   [deployer] = await ethers.getSigners();  //??
 
+  console.log('network: ', hre.network);
+
+
+  const networkName = hre.network.name
+
   console.log("Deploying DDAContract");
-  const Token = await hre.ethers.getContractFactory("DDAContract");
-  const ddAContract = await Token.deploy(deployer.address);
-  await ddAContract.deployed();
   console.log("Deployer address: ", deployer.address);
+  console.log('name: ', networkName);
+  const DDAcontract = await ethers.getContractFactory("DDAContract");
+  const ddAContract = await DDAcontract.deploy(deployer.address);
+  await ddAContract.deployed();
   console.log("DDAContract address: ", ddAContract.address);
   await run("verify:verify", {
     address: ddAContract.address,
