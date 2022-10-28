@@ -46,7 +46,6 @@ const config: HardhatUserConfig = {
       url: process.env.GOERLI_URL || "",
       accounts: [
         process.env.PRIVATE_KEY || "",
-        process.env.TEST_WALLET_PRIVATE_KEY || "",
       ],
       gas: 2100000,
       gasPrice: 8000000000,
@@ -92,7 +91,7 @@ const config: HardhatUserConfig = {
     // },
   },
   mocha: {
-    timeout: 100000000,
+    timeout: 40000
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

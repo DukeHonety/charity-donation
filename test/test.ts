@@ -33,21 +33,22 @@ describe("DDAContract Test network", () => {
       // await tusdtToken.connect(deployer).mint(donater2.address, Web3.utils.toWei('10000000000', 'ether'));
       // await tusdtToken.connect(deployer).mint('0x61207ECa7F1C578584566c042CD15fc21801C307', Web3.utils.toWei('100000000', 'ether'));
       // await tusdtToken.connect(deployer).mint('0xb1Ae08169aa8f7F7486C71af2Cd66Ec3C15165cD', Web3.utils.toWei('100000000', 'ether'));
-    });
+    // });
 
-    it("Deployed DDAContract", async () => {
+    it("Deployed DDAContract", async (done) => {
       [deployer] = await ethers.getSigners(); //??
       console.log("deployer: ", deployer.address);
       // console.log("admin: ", admin.address);
-      Token = await ethers.getContractFactory("DDAContract");
-      ddaContract = await Token.deploy(deployer.address);
+      const DDAContract = await ethers.getContractFactory("DDAContract");
+      ddaContract = await DDAContract.deploy(deployer.address);
       await ddaContract.deployed();
       console.log("DDAContract address: ", ddaContract.address);
       console.log(
         "ddaContract verify: ",
         `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
-      );
-    });
+        );
+      done();
+    }).timeout(100000000);;
 
   });
   // describe("Doing Registers", () => {
