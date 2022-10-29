@@ -7,8 +7,7 @@ async function main() {
   let deployer: SignerWithAddress;
   [deployer] = await ethers.getSigners();  //??
 
-  console.log('network: ', hre.network);
-
+  // console.log('network: ', hre.network);
 
   const networkName = hre.network.name
 
