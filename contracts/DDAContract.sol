@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.14;
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import '@thesolidchain/pancake-swap-periphery/contracts/interfaces/IPancakeRouter02.sol';
+import '@uniswap/v2-core/contracts/interfaces/IPancakeFactory.sol';
+import '@uniswap/v2-core/contracts/interfaces/IPancakePair.sol';
+
 contract DDAContract is AccessControl {
     
     enum CharityType {
@@ -11,10 +14,11 @@ contract DDAContract is AccessControl {
         FUNDRAISER
     }
 
-    address public SWAP_ROUTER_ADDRESS;
-    address public WETH_ADDRESS;
-    address public USDT_ADDRESS;
-    address public OKAPI_ADDRESS;
+    address public immutable SWAP_ROUTER_ADDRESS;
+    address public immutable SWAP_FACTOR_ADDRESS;
+    address public immutable WETH_ADDRESS;
+    address public immutable USDT_ADDRESS;
+    address public immutable OKAPI_ADDRESS;
 
     bytes32 private ADMIN_ROLE;
     struct Catalog {
@@ -65,11 +69,12 @@ contract DDAContract is AccessControl {
         uint256 timestamp
     );
     constructor(address _admin, address _swapRouter, address _weth, address _usdt, address _okapi) {
-        _setupRole(ADMIN_ROLE, _admin);
         SWAP_ROUTER_ADDRESS = _swapRouter;
         WETH_ADDRESS = _weth;
         USDT_ADDRESS = _usdt;
         OKAPI_ADDRESS = _okapi;
+        SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
+        _setupRole(ADMIN_ROLE, _admin);
     }
     function donate(uint256 _to, address _currency, uint256 _amount) external {
         IERC20 currency = IERC20(_currency);
@@ -81,7 +86,12 @@ contract DDAContract is AccessControl {
 
         uint256 price = 1 ether;
         if (_currency == USDT_ADDRESS)
-            price = 2 ether;
+            price = 1 ether;
+        else{            
+            address pairAddress = IPancakeFactory(SWAP_FACTOR_ADDRESS).getPair(USDT_ADDRESS, _currency);
+            require (pairAddress != address(0), 'There is no pool between your token and usdt');
+            price = getTokenPrice(pairAddress, _currency, 1 ether);
+        }
         uint256 usdtAmount = _amount * price / 1 ether;
         uint256 ratio = 10;
 
@@ -101,7 +111,7 @@ contract DDAContract is AccessControl {
         uint256 buyAmount = _amount * ratio / 100;
         charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
         currency.transferFrom(msg.sender, charities[_to].wallet_address, transferAmount);
-        // swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
+        swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         emit Donate(msg.sender, charities[_to].wallet_address, _currency, transferAmount, block.timestamp);
     }
     function createCharity(CharityType _type, Catalog calldata _catalog) external {
@@ -141,14 +151,13 @@ contract DDAContract is AccessControl {
         IPancakeRouter02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
     }
 
-    // function getTokenPrice(address pairAddress, uint amount) public view returns(uint)
-    // {
-    //     IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
-    //     IERC20 token1 = IERC20(pair.token1);
-    //     (uint Res0, uint Res1,) = pair.getReserves();
-
-    //     // decimals
-    //     uint res0 = Res0*(10**token1.decimals());
-    //     return((amount*res0)/Res1); // return amount of token0 needed to buy token1
-    // }
+    function getTokenPrice(address pairAddress, address currency, uint amount) public view returns(uint)
+    {
+        IPancakePair pair = IPancakePair(pairAddress);
+        (uint Res0, uint Res1,) = pair.getReserves();
+        if(pair.token1() == currency)
+            return((amount*Res0)/Res1);
+        else
+            return((amount*Res1)/Res0);
+    }
 }
