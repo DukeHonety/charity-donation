@@ -9,6 +9,7 @@ describe("DDAContract Test network", () => {
   let ddaContract: Contract,
     tUsdtToken: Contract,
     okapiToken: Contract,
+    tethToken: Contract,
     deployer: SignerWithAddress,
     donater1: SignerWithAddress,
     donater2: SignerWithAddress,
@@ -16,26 +17,37 @@ describe("DDAContract Test network", () => {
     fundRaiser2: SignerWithAddress,
     charity1: SignerWithAddress;
 
-  describe("Deploying", () => {
+  describe("Deploying Contracts", () => {
     it("Set accounts", async () => {
       [deployer, donater1, donater2, fundRaiser1, fundRaiser2, charity1] = await ethers.getSigners();
       console.log("deployer: ", deployer.address);
     });
     it("Deployed test usdt token", async () => {
+      console.log("Deploying TUSDT token");
       const TUSDT = await ethers.getContractFactory("TUSDT");
       tUsdtToken = await TUSDT.deploy(deployer.address);
       await tUsdtToken.deployed();
-      
       console.log("[TUSDT address] : ", tUsdtToken.address);
       console.log(
         "tusdtToken verify: ",
-        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network testnet ${tUsdtToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network bscTestnet ${tUsdtToken.address} ${deployer.address}`
       );
       await tUsdtToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether')); // 10000000000 ether
       await tUsdtToken.connect(deployer).mint(donater1.address, Web3.utils.toWei('10000000000', 'ether'));
       await tUsdtToken.connect(deployer).mint(donater2.address, Web3.utils.toWei('10000000000', 'ether'));
-    });
-    it("Deployed test okapi token", async () => {
+
+      console.log("Deploying TETH token");
+      const TETH = await ethers.getContractFactory("TETH");
+      tethToken = await TETH.deploy(deployer.address);
+      await tethToken.deployed();
+      console.log("[TETH address] : ", tethToken.address);
+      console.log(
+        "tethToken verify: ",
+        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network bscTestnet ${tethToken.address} ${deployer.address}`
+      );
+      await tethToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
+      
+      console.log("Deploying TOKAPI token");
       const OKAPI = await ethers.getContractFactory("TOKAPI");
       okapiToken = await OKAPI.deploy(deployer.address);
       await okapiToken.deployed();
@@ -45,10 +57,8 @@ describe("DDAContract Test network", () => {
         `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network bscTestnet ${okapiToken.address} ${deployer.address}`
       );
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
-    });
-    it("Deployed DDAContract", async () => {
-      [deployer] = await ethers.getSigners(); //??
-      console.log("deployer: ", deployer.address);
+
+      console.log("Deploying DDAContract token");
       // console.log("admin: ", admin.address);
       const DDAContract = await ethers.getContractFactory("DDAContract");
       ddaContract = await DDAContract.deploy(deployer.address, deployer.address, deployer.address, tUsdtToken.address, okapiToken.address);
@@ -61,7 +71,7 @@ describe("DDAContract Test network", () => {
     });
 
   });
-  describe("Doing Registers", () => {
+  describe("Doing Donates", () => {
     it("Create Charity", async () => {
       const information = {
         vip: '',
@@ -107,13 +117,13 @@ describe("DDAContract Test network", () => {
 function getFinalDonation(donation){
   let val = parseInt(donation);
   if (val >= 250000) {
-    val *= 0.99;
+    val *= 0.999;
   } else if (val >= 100000) {
-    val *= 0.97
+    val *= 0.997
   } else if (val >= 50000) {
-    val *= 0.95
+    val *= 0.995
   } else if ( val >= 10000) {
-    val *= 0.93
+    val *= 0.993
   } else {
     val *= 0.9;
   }

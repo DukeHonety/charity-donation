@@ -21,26 +21,28 @@ contract DDAContract is AccessControl {
     address public immutable OKAPI_ADDRESS;
 
     bytes32 private ADMIN_ROLE;
+
     struct Catalog {
-        string vip; // charity
-        string website; // charity
+        string vip;
+        string website;
         string name;
         string email;
         string country;
         string summary;
         string detail;
         string photo;
-        string title; // fundRaiser
-        string location; // fundRaiser
+        string title;
+        string location;
     }
     struct CharityStruct {
-        address wallet_address;
+        address walletAddress;
         CharityType charityType;
-        uint256 fund; // fundRaiser
+        uint256 fund;
         Catalog catalog;
     }
     
     CharityStruct[] public charities;
+
     mapping(address => bool) private isExistAddress;
 
     modifier hasAdminRole() {
@@ -57,7 +59,7 @@ contract DDAContract is AccessControl {
     );
 
     event CreateCharity(
-        address wallet_address,
+        address walletAddress,
         CharityType charityType,
         Catalog catalog,
         uint256 fund,
@@ -65,9 +67,10 @@ contract DDAContract is AccessControl {
     );
 
     event RemoveCharity(
-        address indexed wallet_address,
+        address indexed walletAddress,
         uint256 timestamp
     );
+
     constructor(address _admin, address _swapRouter, address _weth, address _usdt, address _okapi) {
         SWAP_ROUTER_ADDRESS = _swapRouter;
         WETH_ADDRESS = _weth;
@@ -76,13 +79,14 @@ contract DDAContract is AccessControl {
         SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
         _setupRole(ADMIN_ROLE, _admin);
     }
+
     function donate(uint256 _to, address _currency, uint256 _amount) external {
         IERC20 currency = IERC20(_currency);
         
         require (_amount > 1 ether, "Deposit amount error");
         require (currency.balanceOf(msg.sender) > _amount, "Not enough tokens!");
-        require (isExistAddress[charities[_to].wallet_address], "FundRaiser's address isn't registered!");
-        require (msg.sender != charities[_to].wallet_address, 'You can not send yourself');
+        require (isExistAddress[charities[_to].walletAddress], "FundRaiser's address isn't registered!");
+        require (msg.sender != charities[_to].walletAddress, 'You can not send yourself');
 
         uint256 price = 1 ether;
         if (_currency == USDT_ADDRESS)
@@ -104,15 +108,15 @@ contract DDAContract is AccessControl {
         } else if (usdtAmount >= 10000 ether) {
             ratio = 7;
         } else {
-            ratio = 10;
+            ratio = 100;
         }
 
-        uint256 transferAmount = _amount * (100 - ratio) / 100;
-        uint256 buyAmount = _amount * ratio / 100;
+        uint256 transferAmount = _amount * (10000 - ratio) / 10000;
+        uint256 buyAmount = _amount * ratio / 10000;
         charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
-        currency.transferFrom(msg.sender, charities[_to].wallet_address, transferAmount);
+        currency.transferFrom(msg.sender, charities[_to].walletAddress, transferAmount);
         swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
-        emit Donate(msg.sender, charities[_to].wallet_address, _currency, transferAmount, block.timestamp);
+        emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
     }
     function createCharity(CharityType _type, Catalog calldata _catalog) external {
         require(!isExistAddress[msg.sender], 'This address is already exist');
@@ -124,7 +128,7 @@ contract DDAContract is AccessControl {
                  'There is empty string passed as parameter');
 
         charities.push(CharityStruct({
-            wallet_address: msg.sender,
+            walletAddress: msg.sender,
             charityType: _type,
             catalog: _catalog,
             fund:0
@@ -133,7 +137,7 @@ contract DDAContract is AccessControl {
         emit CreateCharity(msg.sender, _type, _catalog, 0,  block.timestamp);
     }
     function removeCharity(uint index) public hasAdminRole{
-        address userAddress = charities[index].wallet_address;
+        address userAddress = charities[index].walletAddress;
         isExistAddress[userAddress] = false;
         delete charities[index];
         emit RemoveCharity(userAddress, block.timestamp);
