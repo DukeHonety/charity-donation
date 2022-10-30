@@ -1,8 +1,9 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-const { expect } = require("chai");
 import Web3 from "web3";
+import env from "dotenv";
+const { expect } = require("chai");
 
 describe("DDAContract Test network", () => {
   let Token;
@@ -43,7 +44,7 @@ describe("DDAContract Test network", () => {
       console.log("[TETH address] : ", tethToken.address);
       console.log(
         "tethToken verify: ",
-        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network bscTestnet ${tethToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TETH.sol:TETH" --network bscTestnet ${tethToken.address} ${deployer.address}`
       );
       await tethToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
       
@@ -59,9 +60,8 @@ describe("DDAContract Test network", () => {
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
 
       console.log("Deploying DDAContract token");
-      // console.log("admin: ", admin.address);
       const DDAContract = await ethers.getContractFactory("DDAContract");
-      ddaContract = await DDAContract.deploy(deployer.address, deployer.address, deployer.address, tUsdtToken.address, okapiToken.address);
+      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.WETH_ADDRESS, tUsdtToken.address, okapiToken.address);
       await ddaContract.deployed();
       console.log("DDAContract address: ", ddaContract.address);
       console.log(
@@ -71,46 +71,42 @@ describe("DDAContract Test network", () => {
     });
 
   });
-  describe("Doing Donates", () => {
-    it("Create Charity", async () => {
-      const information = {
-        vip: '',
-        website: '',
-        name: 'Brian',
-        email: 'Brian@gmail.com',
-        country: 'US',
-        summary: 'Help Brian Heal After Surviving a School Shooting',
-        detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
-        photo: 'http://ipfs',
-        title: 'Help Brian Heal After Surviving a School Shooting',
-        location: 'Washington'
-      };
-      await ddaContract.connect(charity1).createCharity('0', information);
-      await ddaContract.connect(fundRaiser1).createCharity('1', information);
-      console.log(await ddaContract.connect(charity1).charities(0));
-    });
+  // describe("Doing Donates", () => {
+  //   it("Create Charity", async () => {
+  //     let information = {
+  //       vip: '',
+  //       website: '',
+  //       name: 'Brian',
+  //       email: 'Brian@gmail.com',
+  //       country: 'US',
+  //       summary: 'Help Brian Heal After Surviving a School Shooting',
+  //       detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
+  //       photo: 'http://ipfs',
+  //       title: 'Help Brian Heal After Surviving a School Shooting',
+  //       location: 'Washington'
+  //     };
+  //     information.name = 'Brian';
+  //     await ddaContract.connect(charity1).createCharity('0', information);
+  //     information.name = 'fundRaiser1';
+  //     await ddaContract.connect(fundRaiser1).createCharity('1', information);
+  //     information.name = 'fundRaiser2';
+  //     await ddaContract.connect(fundRaiser2).createCharity('1', information);
+  //     expect(await ddaContract.charityCount()).to.equal(3);
+  //     await ddaContract.connect(deployer).removeCharity('1');
+  //     expect(await ddaContract.charityCount()).to.equal(2);
+  //     expect((await ddaContract.charities(1))['catalog']['name']).to.equal('fundRaiser2');
+  //   });
 
-    it("Transfer Donation", async() => {
-      console.log('//////////////////////////////Do Donation//////////////////////////////');
-      let weiCurrency = await tUsdtToken.balanceOf(donater1.address);
-      console.log('[Donater1 currency (TUSDT):]', ethers.utils.formatEther(weiCurrency));
-      const donation1 = '100';
-      const donation2 = '60000';
-      console.log('[Transfer donation 2 times: ' + donation1 + ' TUSDT and ' + donation2 + ' TUSDT]');
+  //   it("Transfer Donation", async() => {
+  //     let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
+  //     console.log('[Donater1 currency (TUSDT):]', donater1Currency);
+  //     await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
+  //     await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+  //     let charityFund = (await ddaContract.charities(0))['fund'];
+  //     expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
 
-      await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei(donation1, 'ether'));
-      await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei(donation1, 'ether')); // 10000 ether
-      let charityFund = (await ddaContract.charities(0))['fund'];
-      console.log('[Charity fund]', ethers.utils.formatEther(charityFund));
-
-      await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei(donation2, 'ether'));
-      await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei(donation2, 'ether')); // 10000 ether
-      const charityVal = await tUsdtToken.balanceOf(charity1.address);
-
-      weiCurrency = await tUsdtToken.balanceOf(donater1.address);
-      console.log('[Donater1 currency (TUSDT):]', ethers.utils.formatEther(weiCurrency));
-    });
-  });
+  //   });
+  // });
 
 });
 
@@ -125,7 +121,7 @@ function getFinalDonation(donation){
   } else if ( val >= 10000) {
     val *= 0.993
   } else {
-    val *= 0.9;
+    val *= 0.99;
   }
   return val;
 }
