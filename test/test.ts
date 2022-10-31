@@ -71,42 +71,41 @@ describe("DDAContract Test network", () => {
     });
 
   });
-  // describe("Doing Donates", () => {
-  //   it("Create Charity", async () => {
-  //     let information = {
-  //       vip: '',
-  //       website: '',
-  //       name: 'Brian',
-  //       email: 'Brian@gmail.com',
-  //       country: 'US',
-  //       summary: 'Help Brian Heal After Surviving a School Shooting',
-  //       detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
-  //       photo: 'http://ipfs',
-  //       title: 'Help Brian Heal After Surviving a School Shooting',
-  //       location: 'Washington'
-  //     };
-  //     information.name = 'Brian';
-  //     await ddaContract.connect(charity1).createCharity('0', information);
-  //     information.name = 'fundRaiser1';
-  //     await ddaContract.connect(fundRaiser1).createCharity('1', information);
-  //     information.name = 'fundRaiser2';
-  //     await ddaContract.connect(fundRaiser2).createCharity('1', information);
-  //     expect(await ddaContract.charityCount()).to.equal(3);
-  //     await ddaContract.connect(deployer).removeCharity('1');
-  //     expect(await ddaContract.charityCount()).to.equal(2);
-  //     expect((await ddaContract.charities(1))['catalog']['name']).to.equal('fundRaiser2');
-  //   });
+  describe("Doing Donates", () => {
+    it("Create Charity", async () => {
+      let information = {
+        vip: '',
+        website: '',
+        name: 'Brian',
+        email: 'Brian@gmail.com',
+        country: 'US',
+        summary: 'Help Brian Heal After Surviving a School Shooting',
+        detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
+        photo: 'http://ipfs',
+        title: 'Help Brian Heal After Surviving a School Shooting',
+        location: 'Washington'
+      };
+      information.name = 'Brian';
+      await ddaContract.connect(charity1).createCharity('0', information);
+      information.name = 'fundRaiser1';
+      await ddaContract.connect(fundRaiser1).createCharity('1', information);
+      information.name = 'fundRaiser2';
+      await ddaContract.connect(fundRaiser2).createCharity('1', information);
+      await ddaContract.connect(deployer).removeCharity('1');
+      const charities = await ddaContract.getCharities();
+      expect((await ddaContract.charities(1))['catalog']['name']).to.equal('fundRaiser2');
+    });
 
-  //   it("Transfer Donation", async() => {
-  //     let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
-  //     console.log('[Donater1 currency (TUSDT):]', donater1Currency);
-  //     await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
-  //     await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
-  //     let charityFund = (await ddaContract.charities(0))['fund'];
-  //     expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
+    // it("Transfer Donation", async() => {
+    //   let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
+    //   console.log('[Donater1 currency (TUSDT):]', donater1Currency);
+    //   await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
+    //   await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+    //   let charityFund = (await ddaContract.charities(0))['fund'];
+    //   expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
 
-  //   });
-  // });
+    // });
+  });
 
 });
 

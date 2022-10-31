@@ -42,7 +42,6 @@ contract DDAContract is AccessControl {
     }
     
     CharityStruct[] public charities;
-    uint public charityCount;
 
     mapping(address => bool) private isExistAddress;
 
@@ -79,7 +78,6 @@ contract DDAContract is AccessControl {
         OKAPI_ADDRESS = _okapi;
         SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
         _setupRole(ADMIN_ROLE, _admin);
-        charityCount = 0;
     }
 
     function donate(uint256 _to, address _currency, uint256 _amount) external {
@@ -136,23 +134,25 @@ contract DDAContract is AccessControl {
             fund:0
         }));
         isExistAddress[msg.sender] = true;
-        charityCount += 1;
         emit CreateCharity(msg.sender, _type, _catalog, 0,  block.timestamp);
     }
 
     function removeCharity(uint index) public hasAdminRole{
-        require(charityCount > index, 'That charity is not existed!');
+        require(charities.length > index, 'That charity is not existed!');
         address userAddress = charities[index].walletAddress;
         isExistAddress[userAddress] = false;
         uint i;
         for(i = index + 1; i < charities.length; i++) {
             charities[i-1] = charities[i];
         }
-        delete charities[charityCount - 1];
-        charityCount -= 1;
+        charities.pop();
         emit RemoveCharity(userAddress, block.timestamp);
     }
-    
+
+    function getCharities() public view returns (CharityStruct[] memory){
+        return charities;
+    }
+
     function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
         
