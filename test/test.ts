@@ -86,14 +86,28 @@ describe("DDAContract Test network", () => {
         location: 'Washington'
       };
       information.name = 'Brian';
+
+      // await ddaContract.connect(deployer).createCharity('0', information); // deployer can not be charity
+
       await ddaContract.connect(charity1).createCharity('0', information);
       information.name = 'fundRaiser1';
       await ddaContract.connect(fundRaiser1).createCharity('1', information);
       information.name = 'fundRaiser2';
       await ddaContract.connect(fundRaiser2).createCharity('1', information);
-      await ddaContract.connect(deployer).removeCharity('1');
+
+      await ddaContract.connect(deployer).addAdmin(donater1.address);
+      await ddaContract.connect(deployer).addAdmin(donater2.address);
+      await ddaContract.connect(deployer).removeAdmin(1);
+      expect(await ddaContract.adminUsers(1)).to.equal(donater2.address);
+      await ddaContract.connect(donater2).blackCharity(0); // black fundraiser1
+      // await ddaContract.connect(fundRaiser1).createCharity('1', information); // can not create with black address fundraiser1
+
       const charities = await ddaContract.getCharities();
-      expect((await ddaContract.charities(1))['catalog']['name']).to.equal('fundRaiser2');
+      expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
+
+      
+
+
     });
 
     // it("Transfer Donation", async() => {

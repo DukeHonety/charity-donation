@@ -183,20 +183,22 @@ contract DDAContract is AccessControl {
     }
 
     function removeAdmin(uint index) public hasOwnerRole{
+        require(index != 0, 'Cannot remove owner from admin list');
         require(adminUsers.length > index, 'That address is not existed!');
+        address userAddress = adminUsers[index];
         uint i;
         for(i = index + 1; i < adminUsers.length; i++) {
             adminUsers[i-1] = adminUsers[i];
         }
         adminUsers.pop();
-        isAdminAddress[adminUsers[i]] = false;
-        emit RemoveAdmin(adminUsers[i], block.timestamp);
+        isAdminAddress[userAddress] = false;
+        emit RemoveAdmin(userAddress, block.timestamp);
     }
     function getCharities() public view returns (CharityStruct[] memory){
         return charities;
     }
 
-    function getAdminUsers() public view returns (CharityStruct[] memory){
+    function getAdminUsers() public view returns (address[] memory){
         return adminUsers;
     }
 
