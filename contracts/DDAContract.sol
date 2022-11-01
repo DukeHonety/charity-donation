@@ -42,11 +42,23 @@ contract DDAContract is AccessControl {
     }
     
     CharityStruct[] public charities;
+    address[] public adminUsers;
+    mapping(address => bool) private isAdminAddress;
+    mapping(address => bool) private isCharityAddress;
+    mapping(address => bool) private isBlackAddress;
 
-    mapping(address => bool) private isExistAddress;
+    modifier hasOwnerRole() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not owner");
+        _;
+    }
 
     modifier hasAdminRole() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
+        require(isAdminAddress[msg.sender] == true, "Caller is not an admin");
+        _;
+    }
+
+    modifier isInBlackList() {
+        require(isBlackAddress[msg.sender] == false, "Current wallet is in black list");
         _;
     }
 
@@ -66,7 +78,18 @@ contract DDAContract is AccessControl {
         uint256 timestamp
     );
 
-    event RemoveCharity(
+    event BlackCharity(
+        address indexed walletAddress,
+        address indexed adminAddress,
+        uint256 timestamp
+    );
+
+    event AddAdmin(
+        address indexed walletAddress,
+        uint256 timestamp
+    );
+
+    event RemoveAdmin(
         address indexed walletAddress,
         uint256 timestamp
     );
@@ -78,14 +101,15 @@ contract DDAContract is AccessControl {
         OKAPI_ADDRESS = _okapi;
         SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
         _setupRole(ADMIN_ROLE, _admin);
+        adminUsers.push(_admin);
+        isCharityAddress[_admin] = true;
+        isAdminAddress[_admin] = true;
     }
 
-    function donate(uint256 _to, address _currency, uint256 _amount) external {
+    function donate(uint256 _to, address _currency, uint256 _amount) external isInBlackList{
         IERC20 currency = IERC20(_currency);
-        
-        require (_amount > 1 ether, "Deposit amount error");
         require (currency.balanceOf(msg.sender) > _amount, "Not enough tokens!");
-        require (isExistAddress[charities[_to].walletAddress], "FundRaiser's address isn't registered!");
+        require (isCharityAddress[charities[_to].walletAddress], "FundRaiser's address isn't registered!");
         require (msg.sender != charities[_to].walletAddress, 'You can not send yourself');
 
         uint256 price = 1 ether;
@@ -118,8 +142,8 @@ contract DDAContract is AccessControl {
         swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
     }
-    function createCharity(CharityType _type, Catalog calldata _catalog) external {
-        require(!isExistAddress[msg.sender], 'This address is already exist');
+    function createCharity(CharityType _type, Catalog calldata _catalog) external isInBlackList{
+        require(!isCharityAddress[msg.sender], 'This address is already exist');
         require( bytes(_catalog.email).length > 0 &&
                  bytes(_catalog.country).length > 0 &&
                  bytes(_catalog.summary).length > 0 &&
@@ -133,24 +157,47 @@ contract DDAContract is AccessControl {
             catalog: _catalog,
             fund:0
         }));
-        isExistAddress[msg.sender] = true;
+        isCharityAddress[msg.sender] = true;
         emit CreateCharity(msg.sender, _type, _catalog, 0,  block.timestamp);
     }
 
-    function removeCharity(uint index) public hasAdminRole{
+    function blackCharity(uint index) public hasAdminRole{
         require(charities.length > index, 'That charity is not existed!');
         address userAddress = charities[index].walletAddress;
-        isExistAddress[userAddress] = false;
         uint i;
         for(i = index + 1; i < charities.length; i++) {
             charities[i-1] = charities[i];
         }
         charities.pop();
-        emit RemoveCharity(userAddress, block.timestamp);
+        isCharityAddress[userAddress] = false;
+        isBlackAddress[userAddress] = true;
+        emit BlackCharity(userAddress, msg.sender, block.timestamp);
     }
 
+    function addAdmin(address _newAddress) public hasOwnerRole{
+        require(!isCharityAddress[_newAddress], 'This address is in charity list');
+        require(!isBlackAddress[_newAddress], 'This address is in black list');
+        isAdminAddress[_newAddress] = true;
+        adminUsers.push(_newAddress);
+        emit AddAdmin(_newAddress, block.timestamp);
+    }
+
+    function removeAdmin(uint index) public hasOwnerRole{
+        require(adminUsers.length > index, 'That address is not existed!');
+        uint i;
+        for(i = index + 1; i < adminUsers.length; i++) {
+            adminUsers[i-1] = adminUsers[i];
+        }
+        adminUsers.pop();
+        isAdminAddress[adminUsers[i]] = false;
+        emit RemoveAdmin(adminUsers[i], block.timestamp);
+    }
     function getCharities() public view returns (CharityStruct[] memory){
         return charities;
+    }
+
+    function getAdminUsers() public view returns (CharityStruct[] memory){
+        return adminUsers;
     }
 
     function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
