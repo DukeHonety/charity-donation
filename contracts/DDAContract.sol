@@ -177,8 +177,8 @@ contract DDAContract is AccessControl {
     function addAdmin(address _newAddress) public hasOwnerRole{
         require(!isCharityAddress[_newAddress], 'This address is in charity list');
         require(!isBlackAddress[_newAddress], 'This address is in black list');
-        isAdminAddress[_newAddress] = true;
         adminUsers.push(_newAddress);
+        isAdminAddress[_newAddress] = true;
         emit AddAdmin(_newAddress, block.timestamp);
     }
 
