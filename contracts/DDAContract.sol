@@ -41,8 +41,13 @@ contract DDAContract is AccessControl {
         Catalog catalog;
     }
     
+    struct AdminStruct {
+        address walletAddress;
+        string name;
+    }
+
     CharityStruct[] public charities;
-    address[] public adminUsers;
+    AdminStruct[] public adminUsers;
     mapping(address => bool) private isAdminAddress;
     mapping(address => bool) private isCharityAddress;
     mapping(address => bool) private isBlackAddress;
@@ -86,6 +91,7 @@ contract DDAContract is AccessControl {
 
     event AddAdmin(
         address indexed walletAddress,
+        string name,
         uint256 timestamp
     );
 
@@ -101,7 +107,10 @@ contract DDAContract is AccessControl {
         OKAPI_ADDRESS = _okapi;
         SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
         _setupRole(ADMIN_ROLE, _admin);
-        adminUsers.push(_admin);
+        adminUsers.push(AdminStruct({
+            walletAddress: _admin,
+            name: 'owner'
+        }));
         isCharityAddress[_admin] = true;
         isAdminAddress[_admin] = true;
     }
@@ -174,18 +183,21 @@ contract DDAContract is AccessControl {
         emit BlackCharity(userAddress, msg.sender, block.timestamp);
     }
 
-    function addAdmin(address _newAddress) public hasOwnerRole{
+    function addAdmin(address _newAddress, string memory _name) public hasOwnerRole{
         require(!isCharityAddress[_newAddress], 'This address is in charity list');
         require(!isBlackAddress[_newAddress], 'This address is in black list');
-        adminUsers.push(_newAddress);
+        adminUsers.push(AdminStruct({
+            walletAddress: _newAddress,
+            name: _name
+        }));
         isAdminAddress[_newAddress] = true;
-        emit AddAdmin(_newAddress, block.timestamp);
+        emit AddAdmin(_newAddress, _name, block.timestamp);
     }
 
     function removeAdmin(uint index) public hasOwnerRole{
         require(index != 0, 'Cannot remove owner from admin list');
         require(adminUsers.length > index, 'That address is not existed!');
-        address userAddress = adminUsers[index];
+        address userAddress = adminUsers[index].walletAddress;
         uint i;
         for(i = index + 1; i < adminUsers.length; i++) {
             adminUsers[i-1] = adminUsers[i];
@@ -198,7 +210,7 @@ contract DDAContract is AccessControl {
         return charities;
     }
 
-    function getAdminUsers() public view returns (address[] memory){
+    function getAdminUsers() public view returns (AdminStruct[] memory){
         return adminUsers;
     }
 

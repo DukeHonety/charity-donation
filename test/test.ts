@@ -95,10 +95,10 @@ describe("DDAContract Test network", () => {
       information.name = 'fundRaiser2';
       await ddaContract.connect(fundRaiser2).createCharity('1', information);
 
-      await ddaContract.connect(deployer).addAdmin(donater1.address);
-      await ddaContract.connect(deployer).addAdmin(donater2.address);
+      await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');
+      await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
       await ddaContract.connect(deployer).removeAdmin(1);
-      expect(await ddaContract.adminUsers(1)).to.equal(donater2.address);
+      expect((await ddaContract.adminUsers(1))['name']).to.equal('donater2');
       await ddaContract.connect(donater2).blackCharity(0); // black fundraiser1
       // await ddaContract.connect(fundRaiser1).createCharity('1', information); // can not create with black address fundraiser1
 
