@@ -95,15 +95,19 @@ describe("DDAContract Test network", () => {
       information.name = 'fundRaiser2';
       await ddaContract.connect(fundRaiser2).createCharity('1', information);
 
-      await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');
+      await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');      
+      // await ddaContract.connect(deployer).addAdmin(deployer.address, 'admin'); // Admin role is already granted owner
       await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
-      await ddaContract.connect(deployer).removeAdmin(1);
-      expect((await ddaContract.adminUsers(1))['name']).to.equal('donater2');
-      await ddaContract.connect(donater2).blackCharity(0); // black fundraiser1
-      // await ddaContract.connect(fundRaiser1).createCharity('1', information); // can not create with black address fundraiser1
+      await ddaContract.connect(deployer).removeAdmin(0);
+      expect((await ddaContract.adminUsers(0))['name']).to.equal('donater2');
 
-      const charities = await ddaContract.getCharities();
-      expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
+      await ddaContract.connect(donater2).blackCharity(1); // black fundraiser1
+      // await ddaContract.connect(fundRaiser1).createCharity('1', information); // can not create with black address fundraiser1
+      await ddaContract.connect(donater1).createCharity('1', information); // can not create with admin address
+
+      
+      // const charities = await ddaContract.getCharities();
+      // expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
 
       
 
