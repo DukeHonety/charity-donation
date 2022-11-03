@@ -27,10 +27,10 @@ contract DDAContract is AccessControl {
     address public immutable USDT_ADDRESS;
     address public immutable OKAPI_ADDRESS;
 
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant CHARITY_ROLE = keccak256("CHARITY_ROLE");
-    bytes32 public constant BLACK_ROLE = keccak256("BLACK_ROLE");
+    bytes32 private constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 private constant CHARITY_ROLE = keccak256("CHARITY_ROLE");
+    bytes32 private constant BLACK_ROLE = keccak256("BLACK_ROLE");
 
     struct Catalog {
         string vip;
