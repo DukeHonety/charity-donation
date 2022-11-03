@@ -3,8 +3,7 @@ pragma solidity 0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@thesolidchain/pancake-swap-periphery/contracts/interfaces/IPancakeRouter02.sol";
-
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 interface IUniswapV2Factory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
 }
@@ -108,7 +107,7 @@ contract DDAContract is AccessControl {
         WETH_ADDRESS = _weth;
         USDT_ADDRESS = _usdt;
         OKAPI_ADDRESS = _okapi;
-        SWAP_FACTOR_ADDRESS = IPancakeRouter02(SWAP_ROUTER_ADDRESS).factory();
+        SWAP_FACTOR_ADDRESS = IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory();
 
         _setupRole(OWNER_ROLE, _admin);
         _setupRole(ADMIN_ROLE, _admin);
@@ -248,7 +247,7 @@ contract DDAContract is AccessControl {
         path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
-        IPancakeRouter02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
+        IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
     }
 
     function getTokenPrice(address pairAddress, address currency, uint amount) internal view returns(uint)
