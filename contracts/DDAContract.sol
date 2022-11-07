@@ -4,6 +4,7 @@ pragma solidity 0.8.14;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+
 interface IUniswapV2Factory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
 }
@@ -20,17 +21,6 @@ contract DDAContract is AccessControl {
         CHARITY,
         FUNDRAISER
     }
-
-    address public immutable SWAP_ROUTER_ADDRESS;
-    address public immutable SWAP_FACTOR_ADDRESS;
-    address public immutable WETH_ADDRESS;
-    address public immutable USDT_ADDRESS;
-    address public immutable OKAPI_ADDRESS;
-
-    bytes32 private constant OWNER_ROLE = keccak256("OWNER_ROLE");
-    bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 private constant CHARITY_ROLE = keccak256("CHARITY_ROLE");
-    bytes32 private constant BLACK_ROLE = keccak256("BLACK_ROLE");
 
     struct Catalog {
         string vip;
@@ -50,11 +40,22 @@ contract DDAContract is AccessControl {
         uint256 fund;
         Catalog catalog;
     }
-    
+
     struct AdminStruct {
         address walletAddress;
         string name;
     }
+
+    address public immutable SWAP_ROUTER_ADDRESS;
+    address public immutable SWAP_FACTOR_ADDRESS;
+    address public immutable WETH_ADDRESS;
+    address public immutable USDT_ADDRESS;
+    address public immutable OKAPI_ADDRESS;
+
+    bytes32 private constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 private constant CHARITY_ROLE = keccak256("CHARITY_ROLE");
+    bytes32 private constant BLACK_ROLE = keccak256("BLACK_ROLE");
 
     CharityStruct[] public charities;
     AdminStruct[] public adminUsers;
@@ -121,7 +122,7 @@ contract DDAContract is AccessControl {
     */
     function donate(uint256 _to, address _currency, uint256 _amount) external notBlackRole {
         IERC20 currency = IERC20(_currency);
-        require (_amount > 100 wei, "The amount must be bigger than zero!");
+        require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
         require (currency.balanceOf(msg.sender) > _amount, "Not have enough tokens!");
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
 
@@ -180,7 +181,7 @@ contract DDAContract is AccessControl {
 
     /**
      * @notice This function will remove charity and set it as black charity to block on this contract 
-     * @param index: index of chariy on charities list
+     * @param index: index of charity on charities list
      */
     function blackCharity(uint index) external onlyRole(ADMIN_ROLE) {
         require(charities.length > index, 'That charity is not existed!');
@@ -215,7 +216,7 @@ contract DDAContract is AccessControl {
 
     /**
      * @notice This function will remove ADMIN_ROLE of adminUser's selected index
-     * @param index: index of adminuser on adminUsers list
+     * @param index: index of adminUser on adminUsers list
      */
     function removeAdmin(uint index) external onlyRole(OWNER_ROLE) {
         require(adminUsers.length > index, 'That address is not existed!');
