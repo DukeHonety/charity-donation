@@ -10,7 +10,6 @@ describe("DDAContract Test network", () => {
   let ddaContract: Contract,
     tUsdtToken: Contract,
     okapiToken: Contract,
-    tethToken: Contract,
     deployer: SignerWithAddress,
     donater1: SignerWithAddress,
     donater2: SignerWithAddress,
@@ -31,22 +30,9 @@ describe("DDAContract Test network", () => {
       console.log("[TUSDT address] : ", tUsdtToken.address);
       console.log(
         "tusdtToken verify: ",
-        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network bscTestnet ${tUsdtToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network goerli ${tUsdtToken.address} ${deployer.address}`
       );
       await tUsdtToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether')); // 10000000000 ether
-      await tUsdtToken.connect(deployer).mint(donater1.address, Web3.utils.toWei('10000000000', 'ether'));
-      await tUsdtToken.connect(deployer).mint(donater2.address, Web3.utils.toWei('10000000000', 'ether'));
-
-      console.log("Deploying TETH token");
-      const TETH = await ethers.getContractFactory("TETH");
-      tethToken = await TETH.deploy(deployer.address);
-      await tethToken.deployed();
-      console.log("[TETH address] : ", tethToken.address);
-      console.log(
-        "tethToken verify: ",
-        `npx hardhat verify --contract "contracts/TETH.sol:TETH" --network bscTestnet ${tethToken.address} ${deployer.address}`
-      );
-      await tethToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
       
       console.log("Deploying TOKAPI token");
       const OKAPI = await ethers.getContractFactory("TOKAPI");
@@ -55,7 +41,7 @@ describe("DDAContract Test network", () => {
       console.log("[OKAPI address] : ", okapiToken.address);
       console.log(
         "okapiToken verify: ",
-        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network bscTestnet ${okapiToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network goerli ${okapiToken.address} ${deployer.address}`
       );
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
 
@@ -66,7 +52,7 @@ describe("DDAContract Test network", () => {
       console.log("DDAContract address: ", ddaContract.address);
       console.log(
         "ddaContract verify: ",
-        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network bscTestnet ${ddaContract.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
         );
     });
 

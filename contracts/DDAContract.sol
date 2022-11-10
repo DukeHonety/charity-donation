@@ -134,7 +134,7 @@ contract DDAContract is AccessControl {
         if (_currency != USDT_ADDRESS){
             if (_currency == ETH_COMPARE_ADDRESS) {
                 (,int ethPrice,,,) = ETHUSD_PRICE_FEED.latestRoundData();
-                price = uint256(ethPrice);
+                price = uint256(ethPrice) * 1e8;
             }
             else {
                 address pairAddress = IUniswapV2Factory(IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory()).getPair(USDT_ADDRESS, _currency);
