@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.14;
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
@@ -161,13 +160,13 @@ contract DDAContract is AccessControl {
         charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
 
         if (_currency == ETH_COMPARE_ADDRESS) {
-            console.log("msg.vaue: ", msg.value);
-            payable(charities[_to].walletAddress).transfer(msg.value);
+            payable(charities[_to].walletAddress).transfer(transferAmount);
+            swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         }
         else {
             currency.transferFrom(msg.sender, charities[_to].walletAddress, transferAmount);
+            swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         }
-        swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
     }
 
@@ -256,7 +255,7 @@ contract DDAContract is AccessControl {
         return adminUsers;
     }
 
-    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
+    function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public payable {
         address[] memory path = new address[](2);
         if (_tokenIn == ETH_COMPARE_ADDRESS) {
             path[0] = WETH_ADDRESS;

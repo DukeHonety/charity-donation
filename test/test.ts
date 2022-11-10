@@ -61,7 +61,7 @@ describe("DDAContract Test network", () => {
 
       console.log("Deploying DDAContract token");
       const DDAContract = await ethers.getContractFactory("DDAContract");
-      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address);
+      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address, okapiToken.address);
       await ddaContract.deployed();
       console.log("DDAContract address: ", ddaContract.address);
       console.log(
@@ -117,7 +117,7 @@ describe("DDAContract Test network", () => {
       // await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
       console.log(await ethers.provider.getBalance(charity1.address));
       // await ddaContract.connect(donater1).donateToken('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
-      await ddaContract.connect(donater1).donate('0', {value: 100000});
+      await ddaContract.connect(donater1).donate('0', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '1000000000000000000', {value: '1000000000000000000'});
       console.log(await ethers.provider.getBalance(charity1.address));
 
       // let charityFund = (await ddaContract.charities(0))['fund'];
