@@ -4,6 +4,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 interface IUniswapV2Factory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
@@ -47,10 +48,11 @@ contract DDAContract is AccessControl {
     }
 
     address public immutable SWAP_ROUTER_ADDRESS;
-    address public immutable SWAP_FACTOR_ADDRESS;
-    address public immutable WETH_ADDRESS;
     address public immutable USDT_ADDRESS;
     address public immutable OKAPI_ADDRESS;
+    address public immutable WETH_ADDRESS;
+    address private immutable ETH_COMPARE_ADDRESS;
+    AggregatorV3Interface  public immutable ETHUSD_PRICE_FEED;
 
     bytes32 private constant OWNER_ROLE = keccak256("OWNER_ROLE");
     bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -59,7 +61,6 @@ contract DDAContract is AccessControl {
 
     CharityStruct[] public charities;
     AdminStruct[] public adminUsers;
-    
     modifier notBlackRole() {
         require(!hasRole(BLACK_ROLE, msg.sender), "Current wallet is in black list");
         _;
@@ -98,17 +99,17 @@ contract DDAContract is AccessControl {
         uint256 timestamp
     );
 
-    constructor(address _admin, address _swapRouter, address _usdt, address _okapi) {
+    constructor(address _admin, address _swapRouter, address _usdt, address _okapi, address _ethUsdPriceAddress) {
         require(_admin != address(0), 'Admin address can not be zero.');
         require(_swapRouter != address(0), 'Admin address can not be zero.');
         require(_usdt != address(0), 'USDT address can not be zero.');
 
         SWAP_ROUTER_ADDRESS = _swapRouter;
-        WETH_ADDRESS = _okapi;//IUniswapV2Router02(SWAP_ROUTER_ADDRESS).WETH();
-        USDT_ADDRESS = _usdt;
+        USDT_ADDRESS = _usdt; 
         OKAPI_ADDRESS = _okapi;
-        SWAP_FACTOR_ADDRESS = _okapi;//IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory();
-
+        ETHUSD_PRICE_FEED = AggregatorV3Interface(_ethUsdPriceAddress);
+        WETH_ADDRESS = IUniswapV2Router02(SWAP_ROUTER_ADDRESS).WETH();
+        ETH_COMPARE_ADDRESS = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
         _setupRole(OWNER_ROLE, _admin);
         _setupRole(ADMIN_ROLE, _admin);
     }
@@ -119,28 +120,30 @@ contract DDAContract is AccessControl {
      * @param _currency : the cryptocurrency address of donation
      * @param _amount : the amount of cryptocurrency : wei
     */
-    function donate(uint256 _to, address _currency, uint256 _amount) external notBlackRole payable{
+    function donate(uint256 _to, address _currency, uint256 _amount) external notBlackRole payable {
         IERC20 currency = IERC20(_currency);
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
-        if (_currency == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-           require (msg.value > 0, "The amount must be bigger than 0 bnb!");
+        require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
+        if (_currency == ETH_COMPARE_ADDRESS) {
+            require (payable(msg.sender).balance > _amount, "Not have enough tokens!");
         }
         else {
-            require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
             require (currency.balanceOf(msg.sender) > _amount, "Not have enough tokens!");
         }
 
         uint256 price = 1 ether;
         if (_currency != USDT_ADDRESS){
-            if (_currency == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-
+            if (_currency == ETH_COMPARE_ADDRESS) {
+                (,int ethPrice,,,) = ETHUSD_PRICE_FEED.latestRoundData();
+                price = uint256(ethPrice);
             }
             else {
-                address pairAddress = IUniswapV2Factory(SWAP_FACTOR_ADDRESS).getPair(USDT_ADDRESS, _currency);
+                address pairAddress = IUniswapV2Factory(IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory()).getPair(USDT_ADDRESS, _currency);
                 require (pairAddress != address(0), 'There is no pool between your token and usdt');
                 price = getTokenPrice(pairAddress, _currency, 1 ether);
             }
         }
+
         uint256 usdtAmount = _amount * price / 1 ether;
         uint256 ratio = 100;
 
@@ -157,13 +160,14 @@ contract DDAContract is AccessControl {
         uint256 buyAmount = _amount - transferAmount;
         charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
 
-        if (_currency == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-            payable(charities[_to].walletAddress).transfer(transferAmount);
+        if (_currency == ETH_COMPARE_ADDRESS) {
+            console.log("msg.vaue: ", msg.value);
+            payable(charities[_to].walletAddress).transfer(msg.value);
         }
         else {
             currency.transferFrom(msg.sender, charities[_to].walletAddress, transferAmount);
         }
-        // swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
+        swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
     }
 
@@ -253,15 +257,25 @@ contract DDAContract is AccessControl {
     }
 
     function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public {
-        IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
-        
-        IERC20(_tokenIn).approve(SWAP_ROUTER_ADDRESS, _amountIn);
+        address[] memory path = new address[](2);
+        if (_tokenIn == ETH_COMPARE_ADDRESS) {
+            path[0] = WETH_ADDRESS;
+            path[1] = _tokenOut;
+        }
+        else {
+            IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
+            IERC20(_tokenIn).approve(SWAP_ROUTER_ADDRESS, _amountIn);
+            path[0] = _tokenIn;
+            path[1] = _tokenOut;
+        }
 
-        address[] memory path;
-        path = new address[](2);
-        path[0] = _tokenIn;
-        path[1] = _tokenOut;
-        IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
+
+        if (_tokenIn == ETH_COMPARE_ADDRESS) {
+            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactETHForTokens{value: _amountIn}(_amountOutMin, path, _to, block.timestamp + 60);
+        }
+        else {
+            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
+        }
     }
 
     function getTokenPrice(address pairAddress, address currency, uint amount) internal view returns(uint)
