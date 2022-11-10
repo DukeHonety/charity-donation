@@ -98,17 +98,16 @@ contract DDAContract is AccessControl {
         uint256 timestamp
     );
 
-    constructor(address _admin, address _swapRouter, address _weth, address _usdt, address _okapi) {
+    constructor(address _admin, address _swapRouter, address _usdt, address _okapi) {
         require(_admin != address(0), 'Admin address can not be zero.');
         require(_swapRouter != address(0), 'Admin address can not be zero.');
-        require(_weth != address(0), 'WETH address can not be zero.');
         require(_usdt != address(0), 'USDT address can not be zero.');
 
         SWAP_ROUTER_ADDRESS = _swapRouter;
-        WETH_ADDRESS = _weth;
+        WETH_ADDRESS = _okapi;//IUniswapV2Router02(SWAP_ROUTER_ADDRESS).WETH();
         USDT_ADDRESS = _usdt;
         OKAPI_ADDRESS = _okapi;
-        SWAP_FACTOR_ADDRESS = IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory();
+        SWAP_FACTOR_ADDRESS = _okapi;//IUniswapV2Router02(SWAP_ROUTER_ADDRESS).factory();
 
         _setupRole(OWNER_ROLE, _admin);
         _setupRole(ADMIN_ROLE, _admin);
@@ -154,6 +153,34 @@ contract DDAContract is AccessControl {
         emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
     }
 
+    function donate(uint256 _to) external notBlackRole payable {
+        require (msg.value > 0, "The amount must be bigger than 100 wei!");
+        require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
+
+        uint256 price = 300 ether;
+        // address pairAddress = IUniswapV2Factory(SWAP_FACTOR_ADDRESS).getPair(USDT_ADDRESS, _currency);
+        // require (pairAddress != address(0), 'There is no pool between your token and usdt');
+        // price = getTokenPrice(pairAddress, _currency, 1 ether);
+
+        uint256 usdtAmount = msg.value * price;
+        uint256 ratio = 100;
+
+        if (usdtAmount >= 250000 ether) {
+            ratio = 1;
+        } else if (usdtAmount >= 100000 ether) {
+            ratio = 3;
+        } else if (usdtAmount >= 50000 ether) {
+            ratio = 5;
+        } else if (usdtAmount >= 10000 ether) {
+            ratio = 7;
+        }
+        uint256 transferAmount = msg.value * (10000 - ratio) / 10000;
+        uint256 buyAmount = msg.value - transferAmount;
+        charities[_to].fund = charities[_to].fund + transferAmount * price;
+        
+        // swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
+        emit Donate(msg.sender, charities[_to].walletAddress, address(0), msg.value * 1 ether, block.timestamp);
+    }
     /**
      * @notice This function will create charity and store it to charities list 
      * @param _type : 0 (CHARITY), 1 (FUNDRAISER)

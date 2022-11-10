@@ -61,7 +61,7 @@ describe("DDAContract Test network", () => {
 
       console.log("Deploying DDAContract token");
       const DDAContract = await ethers.getContractFactory("DDAContract");
-      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.WETH_ADDRESS, tUsdtToken.address, okapiToken.address);
+      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address);
       await ddaContract.deployed();
       console.log("DDAContract address: ", ddaContract.address);
       console.log(
@@ -86,43 +86,44 @@ describe("DDAContract Test network", () => {
         location: 'Washington'
       };
       information.name = 'Brian';
-
-      // await ddaContract.connect(deployer).createCharity('0', information); // deployer can not be charity
+      await expect(ddaContract.connect(deployer).createCharity('0', information)).to.be.reverted;
 
       await ddaContract.connect(charity1).createCharity('0', information);
-      information.name = 'fundRaiser1';
-      await ddaContract.connect(fundRaiser1).createCharity('1', information);
-      information.name = 'fundRaiser2';
-      await ddaContract.connect(fundRaiser2).createCharity('1', information);
+      // information.name = 'fundRaiser1';
+      // await ddaContract.connect(fundRaiser1).createCharity('1', information);
+      // information.name = 'fundRaiser2';
+      // await ddaContract.connect(fundRaiser2).createCharity('1', information);
 
-      await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');      
-      // await ddaContract.connect(deployer).addAdmin(deployer.address, 'admin'); // Admin role is already granted owner
-      await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
-      await ddaContract.connect(deployer).removeAdmin(0);
-      expect((await ddaContract.adminUsers(0))['name']).to.equal('donater2');
+      // await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');
 
-      await ddaContract.connect(donater2).blackCharity(1); // black fundraiser1
-      // await ddaContract.connect(fundRaiser1).createCharity('1', information); // can not create with black address fundraiser1
-      await ddaContract.connect(donater1).createCharity('1', information); // can not create with admin address
+      // await expect(ddaContract.connect(deployer).addAdmin(deployer.address, 'admin')).to.be.reverted;
 
-      
+      // await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
+      // await ddaContract.connect(deployer).removeAdmin(0);
+
+      // expect((await ddaContract.adminUsers(0))['name']).to.equal('donater2');
+
+      // await ddaContract.connect(donater2).blackCharity(1); // black fundraiser1
+      // await expect(ddaContract.connect(donater1).blackCharity(1)).to.be.reverted;
+
       // const charities = await ddaContract.getCharities();
       // expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
+    });
 
-      
+    it("Transfer Donation", async() => {
+      let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
+      console.log('[Donater1 currency (TUSDT):]', donater1Currency);
+
+      await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
+      console.log(ddaContract.methods);
+      await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+
+      // let charityFund = (await ddaContract.charities(0))['fund'];
+
+      // expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
 
 
     });
-
-    // it("Transfer Donation", async() => {
-    //   let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
-    //   console.log('[Donater1 currency (TUSDT):]', donater1Currency);
-    //   await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
-    //   await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
-    //   let charityFund = (await ddaContract.charities(0))['fund'];
-    //   expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
-
-    // });
   });
 
 });
@@ -130,13 +131,13 @@ describe("DDAContract Test network", () => {
 function getFinalDonation(donation){
   let val = parseInt(donation);
   if (val >= 250000) {
-    val *= 0.999;
+    val *= 0.9999;
   } else if (val >= 100000) {
-    val *= 0.997
+    val *= 0.9997
   } else if (val >= 50000) {
-    val *= 0.995
+    val *= 0.9995
   } else if ( val >= 10000) {
-    val *= 0.993
+    val *= 0.9993
   } else {
     val *= 0.99;
   }

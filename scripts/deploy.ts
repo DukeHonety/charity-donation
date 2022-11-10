@@ -14,12 +14,12 @@ async function main() {
   console.log("Deployer address: ", deployer.address);
   console.log('name: ', networkName);
   const DDAcontract = await ethers.getContractFactory("DDAContract");
-  const ddAContract = await DDAcontract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.WETH_ADDRESS, process.env.USDT_ADDRESS, process.env.OKAPI_ADDRESS);
+  const ddAContract = await DDAcontract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.USDT_ADDRESS, process.env.OKAPI_ADDRESS);
   await ddAContract.deployed();
   console.log("DDAContract address: ", ddAContract.address);
   await run("verify:verify", {
     address: ddAContract.address,
-    constructorArguments: [deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.WETH_ADDRESS, process.env.USDT_ADDRESS, process.env.OKAPI_ADDRESS],
+    constructorArguments: [deployer.address, process.env.SWAP_ROUTER_ADDRESS, process.env.USDT_ADDRESS, process.env.OKAPI_ADDRESS],
   });
   
 }
