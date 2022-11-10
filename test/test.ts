@@ -114,9 +114,11 @@ describe("DDAContract Test network", () => {
       let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
       console.log('[Donater1 currency (TUSDT):]', donater1Currency);
 
-      await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
-      console.log(ddaContract.methods);
-      await ddaContract.connect(donater1).donate('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+      // await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
+      console.log(await ethers.provider.getBalance(charity1.address));
+      // await ddaContract.connect(donater1).donateToken('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+      await ddaContract.connect(donater1).donate('0', {value: 100000});
+      console.log(await ethers.provider.getBalance(charity1.address));
 
       // let charityFund = (await ddaContract.charities(0))['fund'];
 
