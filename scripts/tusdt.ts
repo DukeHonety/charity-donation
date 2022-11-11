@@ -20,9 +20,6 @@ async function main() {
     constructorArguments: [deployer.address],
   });
   await tUsdtToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether')); // 10000000000 ether
-  await tUsdtToken.connect(deployer).mint(donater1.address, Web3.utils.toWei('10000000000', 'ether'));
-  await tUsdtToken.connect(deployer).mint(donater2.address, Web3.utils.toWei('10000000000', 'ether'));
-  
 }
 
 // We recommend this pattern to be able to use async/await everywhere

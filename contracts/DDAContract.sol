@@ -165,6 +165,7 @@ contract DDAContract is AccessControl {
         }
         else {
             currency.transferFrom(msg.sender, charities[_to].walletAddress, transferAmount);
+            currency.transferFrom(msg.sender, address(this), buyAmount);
             swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         }
         emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
@@ -262,7 +263,6 @@ contract DDAContract is AccessControl {
             path[1] = _tokenOut;
         }
         else {
-            IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
             IERC20(_tokenIn).approve(SWAP_ROUTER_ADDRESS, _amountIn);
             path[0] = _tokenIn;
             path[1] = _tokenOut;

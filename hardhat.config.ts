@@ -106,7 +106,7 @@ const config: HardhatUserConfig = {
       // @ts-ignore
       mainnet: process.env.ETHERSCAN_API_KEY,
       // @ts-ignore
-      goerli: process.env.GOERLI_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
       // @ts-ignore
       bsc: process.env.BSCSCAN_API_KEY,
       // @ts-ignore

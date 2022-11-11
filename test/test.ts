@@ -45,74 +45,74 @@ describe("DDAContract Test network", () => {
       );
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
 
-      console.log("Deploying DDAContract token");
-      const DDAContract = await ethers.getContractFactory("DDAContract");
-      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address, okapiToken.address);
-      await ddaContract.deployed();
-      console.log("DDAContract address: ", ddaContract.address);
-      console.log(
-        "ddaContract verify: ",
-        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
-        );
+      // console.log("Deploying DDAContract token");
+      // const DDAContract = await ethers.getContractFactory("DDAContract");
+      // ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address, okapiToken.address);
+      // await ddaContract.deployed();
+      // console.log("DDAContract address: ", ddaContract.address);
+      // console.log(
+      //   "ddaContract verify: ",
+      //   `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address}`
+      //   );
     });
 
   });
-  describe("Doing Donates", () => {
-    it("Create Charity", async () => {
-      let information = {
-        vip: '',
-        website: '',
-        name: 'Brian',
-        email: 'Brian@gmail.com',
-        country: 'US',
-        summary: 'Help Brian Heal After Surviving a School Shooting',
-        detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
-        photo: 'http://ipfs',
-        title: 'Help Brian Heal After Surviving a School Shooting',
-        location: 'Washington'
-      };
-      information.name = 'Brian';
-      await expect(ddaContract.connect(deployer).createCharity('0', information)).to.be.reverted;
+  // describe("Doing Donates", () => {
+  //   it("Create Charity", async () => {
+  //     let information = {
+  //       vip: '',
+  //       website: '',
+  //       name: 'Brian',
+  //       email: 'Brian@gmail.com',
+  //       country: 'US',
+  //       summary: 'Help Brian Heal After Surviving a School Shooting',
+  //       detail: 'On October 24, our godson Brian was in health class at Central Visual Performing Arts (VPA) high school in St. Louis, Missouri, when his school went on lockdown. Minutes later, a shooter entered his classroom, killing his teacher and wounding Brian and several classmates',
+  //       photo: 'http://ipfs',
+  //       title: 'Help Brian Heal After Surviving a School Shooting',
+  //       location: 'Washington'
+  //     };
+  //     information.name = 'Brian';
+  //     await expect(ddaContract.connect(deployer).createCharity('0', information)).to.be.reverted;
 
-      await ddaContract.connect(charity1).createCharity('0', information);
-      // information.name = 'fundRaiser1';
-      // await ddaContract.connect(fundRaiser1).createCharity('1', information);
-      // information.name = 'fundRaiser2';
-      // await ddaContract.connect(fundRaiser2).createCharity('1', information);
+  //     await ddaContract.connect(charity1).createCharity('0', information);
+  //     // information.name = 'fundRaiser1';
+  //     // await ddaContract.connect(fundRaiser1).createCharity('1', information);
+  //     // information.name = 'fundRaiser2';
+  //     // await ddaContract.connect(fundRaiser2).createCharity('1', information);
 
-      // await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');
+  //     // await ddaContract.connect(deployer).addAdmin(donater1.address, 'donater1');
 
-      // await expect(ddaContract.connect(deployer).addAdmin(deployer.address, 'admin')).to.be.reverted;
+  //     // await expect(ddaContract.connect(deployer).addAdmin(deployer.address, 'admin')).to.be.reverted;
 
-      // await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
-      // await ddaContract.connect(deployer).removeAdmin(0);
+  //     // await ddaContract.connect(deployer).addAdmin(donater2.address, 'donater2');
+  //     // await ddaContract.connect(deployer).removeAdmin(0);
 
-      // expect((await ddaContract.adminUsers(0))['name']).to.equal('donater2');
+  //     // expect((await ddaContract.adminUsers(0))['name']).to.equal('donater2');
 
-      // await ddaContract.connect(donater2).blackCharity(1); // black fundraiser1
-      // await expect(ddaContract.connect(donater1).blackCharity(1)).to.be.reverted;
+  //     // await ddaContract.connect(donater2).blackCharity(1); // black fundraiser1
+  //     // await expect(ddaContract.connect(donater1).blackCharity(1)).to.be.reverted;
 
-      // const charities = await ddaContract.getCharities();
-      // expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
-    });
+  //     // const charities = await ddaContract.getCharities();
+  //     // expect((await ddaContract.charities(0))['catalog']['name']).to.equal('fundRaiser1');
+  //   });
 
-    it("Transfer Donation", async() => {
-      let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
-      console.log('[Donater1 currency (TUSDT):]', donater1Currency);
+  //   it("Transfer Donation", async() => {
+  //     let donater1Currency = ethers.utils.formatEther(await tUsdtToken.balanceOf(donater1.address));
+  //     console.log('[Donater1 currency (TUSDT):]', donater1Currency);
 
-      // await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
-      console.log(await ethers.provider.getBalance(charity1.address));
-      // await ddaContract.connect(donater1).donateToken('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
-      await ddaContract.connect(donater1).donate('0', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '1000000000000000000', {value: '1000000000000000000'});
-      console.log(await ethers.provider.getBalance(charity1.address));
+  //     // await tUsdtToken.connect(donater1).approve(ddaContract.address, Web3.utils.toWei('100', 'ether'));
+  //     console.log(await ethers.provider.getBalance(charity1.address));
+  //     // await ddaContract.connect(donater1).donateToken('0', tUsdtToken.address, Web3.utils.toWei('100', 'ether'));
+  //     await ddaContract.connect(donater1).donate('0', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '1000000000000000000', {value: '1000000000000000000'});
+  //     console.log(await ethers.provider.getBalance(charity1.address));
 
-      // let charityFund = (await ddaContract.charities(0))['fund'];
+  //     // let charityFund = (await ddaContract.charities(0))['fund'];
 
-      // expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
+  //     // expect(parseFloat(ethers.utils.formatEther(charityFund))).to.equal(getFinalDonation(100));
 
 
-    });
-  });
+  //   });
+  // });
 
 });
 
