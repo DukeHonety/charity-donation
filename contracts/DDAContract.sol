@@ -25,6 +25,11 @@ contract DDAContract is AccessControl {
     struct Catalog {
         string vip;
         string website;
+        string phone;
+        string linedin;
+        string twitter;
+        string facebook;
+        string instagram;
         string name;
         string email;
         string country;
