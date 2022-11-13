@@ -26,7 +26,7 @@ contract DDAContract is AccessControl {
         string vip;
         string website;
         string phone;
-        string linedin;
+        string linkedin;
         string twitter;
         string facebook;
         string instagram;
@@ -128,6 +128,7 @@ contract DDAContract is AccessControl {
         IERC20 currency = IERC20(_currency);
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
         require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
+        require (charities[_to].walletAddress != msg.sender, "You can not donate to yourself");
         if (_currency == ETH_COMPARE_ADDRESS) {
             require (payable(msg.sender).balance > _amount, "Not have enough tokens!");
         }
