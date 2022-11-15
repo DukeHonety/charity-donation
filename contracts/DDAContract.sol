@@ -150,7 +150,7 @@ contract DDAContract is AccessControl {
         }
 
         uint256 usdtAmount = _amount * price / 1 ether;
-        uint256 ratio = 100;
+        uint256 ratio = 10;
 
         if (usdtAmount >= 250000 ether) {
             ratio = 1;
@@ -161,7 +161,7 @@ contract DDAContract is AccessControl {
         } else if (usdtAmount >= 10000 ether) {
             ratio = 7;
         }
-        uint256 transferAmount = _amount * (10000 - ratio) / 10000;
+        uint256 transferAmount = _amount * (1000 - ratio) / 1000;
         uint256 buyAmount = _amount - transferAmount;
         charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
 

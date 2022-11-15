@@ -119,13 +119,13 @@ describe("DDAContract Test network", () => {
 function getFinalDonation(donation){
   let val = parseInt(donation);
   if (val >= 250000) {
-    val *= 0.9999;
+    val *= 0.999;
   } else if (val >= 100000) {
-    val *= 0.9997
+    val *= 0.997
   } else if (val >= 50000) {
-    val *= 0.9995
+    val *= 0.995
   } else if ( val >= 10000) {
-    val *= 0.9993
+    val *= 0.993
   } else {
     val *= 0.99;
   }
