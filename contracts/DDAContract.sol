@@ -78,6 +78,7 @@ contract DDAContract is AccessControl {
         address indexed _to,
         address indexed _currency,
         uint256 amount,
+        string _comment,
         uint256 timestamp
     );
 
@@ -128,7 +129,7 @@ contract DDAContract is AccessControl {
      * @param _currency : the cryptocurrency address of donation
      * @param _amount : the amount of cryptocurrency : wei
     */
-    function donate(uint256 _to, address _currency, uint256 _amount) external notBlackRole payable {
+    function donate(uint256 _to, address _currency, uint256 _amount, string memory _comment) external notBlackRole payable {
         IERC20 currency = IERC20(_currency);
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
         require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
@@ -178,7 +179,7 @@ contract DDAContract is AccessControl {
             currency.transferFrom(msg.sender, address(this), buyAmount);
             swap(_currency, OKAPI_ADDRESS, buyAmount, 0, msg.sender);
         }
-        emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, block.timestamp);
+        emit Donate(msg.sender, charities[_to].walletAddress, _currency, transferAmount, _comment, block.timestamp);
     }
 
     /**
