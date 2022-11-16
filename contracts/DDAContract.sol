@@ -43,6 +43,7 @@ contract DDAContract is AccessControl {
         address walletAddress;
         CharityType charityType;
         uint256 fund;
+        uint256 goal;
         bytes32 donateType;
         Catalog catalog;
     }
@@ -88,6 +89,7 @@ contract DDAContract is AccessControl {
         bytes32 donateType,
         Catalog catalog,
         uint256 fund,
+        uint256 goal,
         uint256 timestamp
     );
 
@@ -198,10 +200,11 @@ contract DDAContract is AccessControl {
      * @param _type : 0 (CHARITY), 1 (FUNDRAISER)
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
-    function createCharity(CharityType _type, bytes32 _donateType, Catalog calldata _catalog) external notBlackRole {
+    function createCharity(CharityType _type, bytes32 _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
         require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
         require (existDonateTypes[_donateType], 'Current donate type is not exist on list');
+        require (_goal > 0, 'Your goal of your fundraising can not be zero');
         require ( bytes(_catalog.email).length > 0 &&
                  bytes(_catalog.country).length > 0 &&
                  bytes(_catalog.summary).length > 0 &&
@@ -214,10 +217,11 @@ contract DDAContract is AccessControl {
             charityType: _type,
             donateType: _donateType,
             catalog: _catalog,
-            fund:0
+            fund:0,
+            goal: _goal
         }));
         _setupRole(CHARITY_ROLE, msg.sender);
-        emit CreateCharity(msg.sender, _type, _donateType, _catalog, 0,  block.timestamp);
+        emit CreateCharity(msg.sender, _type, _donateType, _catalog, 0, _goal,  block.timestamp);
     }
 
     /**
