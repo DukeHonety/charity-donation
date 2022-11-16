@@ -186,7 +186,7 @@ contract DDAContract is AccessControl {
      * @param _type : 0 (CHARITY), 1 (FUNDRAISER)
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
-    function createCharity(CharityType _type, string _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
+    function createCharity(CharityType _type, string memory _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
         require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
         require (_goal > 0, 'Your goal of your fundraising can not be zero');
