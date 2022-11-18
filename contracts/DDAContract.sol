@@ -53,6 +53,11 @@ contract DDAContract is AccessControl {
         string name;
     }
 
+    struct DonateTypeStruct {
+        string title;
+        string thumbnail;
+    }
+
     address public immutable SWAP_ROUTER_ADDRESS;
     address public immutable USDT_ADDRESS;
     address public immutable OKAPI_ADDRESS;
@@ -67,6 +72,8 @@ contract DDAContract is AccessControl {
 
     CharityStruct[] public charities;
     AdminStruct[] public adminUsers;
+    DonateTypeStruct[] public donateTypes;
+    mapping(string => bool) private existDonateTypes;
 
     modifier notBlackRole() {
         require (!hasRole(BLACK_ROLE, msg.sender), "Current wallet is in black list");
@@ -108,6 +115,20 @@ contract DDAContract is AccessControl {
         address indexed walletAddress,
         uint256 timestamp
     );
+
+    event AddDonateType(
+        address indexed adminAddress,
+        DonateTypeStruct newType,
+        uint256 timestamp
+    );
+
+    event RemoveDonateType(
+        address indexed adminAddress,
+        DonateTypeStruct newType,
+        uint256 timestamp
+    );
+
+
     constructor(address _admin, address _swapRouter, address _usdt, address _okapi, address _ethUsdPriceAddress) {
         require (_admin != address(0), 'Admin address can not be zero.');
         require (_swapRouter != address(0), 'Admin address can not be zero.');
@@ -129,7 +150,7 @@ contract DDAContract is AccessControl {
      * @param _currency : the cryptocurrency address of donation
      * @param _amount : the amount of cryptocurrency : wei
     */
-    function donate(uint256 _to, address _currency, uint256 _amount, string memory _comment) external notBlackRole payable {
+    function donate(uint256 _to, address _currency, uint256 _amount, string calldata _comment) external notBlackRole payable {
         IERC20 currency = IERC20(_currency);
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
         require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
@@ -187,7 +208,7 @@ contract DDAContract is AccessControl {
      * @param _type : 0 (CHARITY), 1 (FUNDRAISER)
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
-    function createCharity(CharityType _type, string memory _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
+    function createCharity(CharityType _type, string calldata _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
         require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
         require (_goal > 0, 'Your goal of your fundraising can not be zero');
@@ -232,7 +253,7 @@ contract DDAContract is AccessControl {
      * @param _newAddress : new adminUser's addresss
      * @param _name : name of adminUser
     */
-    function addAdmin(address _newAddress, string memory _name) external onlyRole(OWNER_ROLE) {
+    function addAdmin(address _newAddress, string calldata _name) external onlyRole(OWNER_ROLE) {
         require (!hasRole(ADMIN_ROLE, _newAddress), 'This address already has admin role');
         require (!hasRole(CHARITY_ROLE, _newAddress), 'This address is in charity list');
         require (!hasRole(BLACK_ROLE, _newAddress), 'This address is in black list');
@@ -263,12 +284,39 @@ contract DDAContract is AccessControl {
         emit RemoveAdmin(userAddress, block.timestamp);
     }
 
+    /**
+     * @notice This function will add donate type
+     * @param _type : donate type name
+     */
+     function addDonateType(DonateTypeStruct calldata _type) external onlyRole(ADMIN_ROLE) {
+        require (!existDonateTypes[_type.title], 'This is existed on the type list');
+        donateTypes.push(_type);
+        existDonateTypes[_type.title] = true;
+        emit AddDonateType(msg.sender, _type, block.timestamp);
+    }
+
+    function removeDonateType(uint _index) external onlyRole(ADMIN_ROLE) {
+        require (donateTypes.length > _index, 'That type is not existed!');
+        DonateTypeStruct memory selectedType = donateTypes[_index];
+        uint i;
+        for(i = _index + 1; i < donateTypes.length; i++) {
+            donateTypes[i-1] = donateTypes[i];
+        }
+        donateTypes.pop();
+        existDonateTypes[selectedType.title] = false;
+        emit RemoveDonateType(msg.sender, selectedType, block.timestamp);
+    }
+
     function getCharities() public view returns (CharityStruct[] memory) {
         return charities;
     }
 
     function getAdminUsers() public view returns (AdminStruct[] memory) {
         return adminUsers;
+    }
+
+    function getDonateTypes() public view returns (DonateTypeStruct[] memory) {
+        return donateTypes;
     }
 
     function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public payable {
