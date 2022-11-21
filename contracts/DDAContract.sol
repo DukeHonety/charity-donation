@@ -108,6 +108,7 @@ contract DDAContract is AccessControl {
         address indexed walletAddress,
         uint256 timestamp
     );
+
     constructor(address _admin, address _swapRouter, address _usdt, address _okapi, address _ethUsdPriceAddress) {
         require (_admin != address(0), 'Admin address can not be zero.');
         require (_swapRouter != address(0), 'Admin address can not be zero.');
@@ -129,7 +130,7 @@ contract DDAContract is AccessControl {
      * @param _currency : the cryptocurrency address of donation
      * @param _amount : the amount of cryptocurrency : wei
     */
-    function donate(uint256 _to, address _currency, uint256 _amount, string memory _comment) external notBlackRole payable {
+    function donate(uint256 _to, address _currency, uint256 _amount, string calldata _comment) external notBlackRole payable {
         IERC20 currency = IERC20(_currency);
         require (hasRole(CHARITY_ROLE, charities[_to].walletAddress), "FundRaiser's address isn't registered!");
         require (_amount > 100 wei, "The amount must be bigger than 100 wei!");
@@ -187,7 +188,7 @@ contract DDAContract is AccessControl {
      * @param _type : 0 (CHARITY), 1 (FUNDRAISER)
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
-    function createCharity(CharityType _type, string memory _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
+    function createCharity(CharityType _type, string calldata _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
         require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
         require (_goal > 0, 'Your goal of your fundraising can not be zero');
@@ -232,7 +233,7 @@ contract DDAContract is AccessControl {
      * @param _newAddress : new adminUser's addresss
      * @param _name : name of adminUser
     */
-    function addAdmin(address _newAddress, string memory _name) external onlyRole(OWNER_ROLE) {
+    function addAdmin(address _newAddress, string calldata _name) external onlyRole(OWNER_ROLE) {
         require (!hasRole(ADMIN_ROLE, _newAddress), 'This address already has admin role');
         require (!hasRole(CHARITY_ROLE, _newAddress), 'This address is in charity list');
         require (!hasRole(BLACK_ROLE, _newAddress), 'This address is in black list');

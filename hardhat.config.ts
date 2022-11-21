@@ -117,6 +117,7 @@ const config: HardhatUserConfig = {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
     },
   },
+  allowUnlimitedContractSize:true, 
 };
 
 export default config;

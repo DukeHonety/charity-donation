@@ -45,15 +45,15 @@ describe("DDAContract Test network", () => {
       );
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
 
-      console.log("Deploying DDAContract token");
-      const DDAContract = await ethers.getContractFactory("DDAContract");
-      ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address, okapiToken.address);
-      await ddaContract.deployed();
-      console.log("DDAContract address: ", ddaContract.address);
-      console.log(
-        "ddaContract verify: ",
-        `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network bscTestnet ${ddaContract.address} ${deployer.address}`
-        );
+      // console.log("Deploying DDAContract token");
+      // const DDAContract = await ethers.getContractFactory("DDAContract");
+      // ddaContract = await DDAContract.deploy(deployer.address, process.env.SWAP_ROUTER_ADDRESS, tUsdtToken.address, okapiToken.address, okapiToken.address);
+      // await ddaContract.deployed();
+      // console.log("DDAContract address: ", ddaContract.address);
+      // console.log(
+      //   "ddaContract verify: ",
+      //   `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network bscTestnet ${ddaContract.address} ${deployer.address}`
+      //   );
     });
 
   });
