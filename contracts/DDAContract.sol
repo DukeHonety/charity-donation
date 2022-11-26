@@ -23,34 +23,15 @@ contract DDAContract is AccessControl {
     }
 
     struct Catalog {
-        string vip;
-        string website;
-        string phone;
-        string linkedin;
-        string twitter;
-        string facebook;
-        string instagram;
-        string name;
-        string email;
-        string country;
-        string summary;
-        string detail;
-        string photo;
-        string title;
-        string location;
-    }
-    struct CharityStruct {
-        address walletAddress;
         CharityType charityType;
         uint256 fund;
         uint256 goal;
         string donateType;
-        Catalog catalog;
+        string photo;
     }
-
-    struct AdminStruct {
+    struct CharityStruct {
         address walletAddress;
-        string name;
+        Catalog catalog;
     }
 
     address public immutable SWAP_ROUTER_ADDRESS;
@@ -66,7 +47,7 @@ contract DDAContract is AccessControl {
     bytes32 private constant BLACK_ROLE = keccak256("BLACK_ROLE");
 
     CharityStruct[] public charities;
-    AdminStruct[] public adminUsers;
+    address[] public adminUsers;
 
     modifier notBlackRole() {
         require (!hasRole(BLACK_ROLE, msg.sender), "Current wallet is in black list");
@@ -83,12 +64,8 @@ contract DDAContract is AccessControl {
     );
 
     event CreateCharity(
-        address walletAddress,
-        CharityType charityType,
-        string donateType,
+        address indexed walletAddress,
         Catalog catalog,
-        uint256 fund,
-        uint256 goal,
         uint256 timestamp
     );
 
@@ -100,7 +77,6 @@ contract DDAContract is AccessControl {
 
     event AddAdmin(
         address indexed walletAddress,
-        string name,
         uint256 timestamp
     );
 
@@ -169,7 +145,7 @@ contract DDAContract is AccessControl {
         }
         uint256 transferAmount = _amount * (1000 - ratio) / 1000;
         uint256 buyAmount = _amount - transferAmount;
-        charities[_to].fund = charities[_to].fund + transferAmount * price / 1 ether;
+        charities[_to].catalog.fund = charities[_to].catalog.fund + transferAmount * price / 1 ether;
 
         if (_currency == ETH_COMPARE_ADDRESS) {
             payable(charities[_to].walletAddress).transfer(transferAmount);
@@ -185,30 +161,19 @@ contract DDAContract is AccessControl {
 
     /**
      * @notice This function will create charity and store it to charities list 
-     * @param _type : 0 (CHARITY), 1 (FUNDRAISER)
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
-    function createCharity(CharityType _type, string calldata _donateType, uint256 _goal, Catalog calldata _catalog) external notBlackRole {
+    function createCharity(Catalog calldata _catalog) external notBlackRole {
         require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
-        require (_goal > 0, 'Your goal of your fundraising can not be zero');
-        require ( bytes(_catalog.email).length > 0 &&
-                 bytes(_catalog.country).length > 0 &&
-                 bytes(_catalog.summary).length > 0 &&
-                 bytes(_catalog.detail).length > 0 &&
-                 bytes(_catalog.name).length > 0,
-                 'There is empty string passed as parameter');
+        require (_catalog.goal > 0, 'Your goal of your fundraising can not be zero');
 
         charities.push(CharityStruct({
             walletAddress: msg.sender,
-            charityType: _type,
-            donateType: _donateType,
-            catalog: _catalog,
-            fund:0,
-            goal: _goal
+            catalog: _catalog
         }));
         _setupRole(CHARITY_ROLE, msg.sender);
-        emit CreateCharity(msg.sender, _type, _donateType, _catalog, 0, _goal,  block.timestamp);
+        emit CreateCharity(msg.sender, _catalog,  block.timestamp);
     }
 
     /**
@@ -231,19 +196,15 @@ contract DDAContract is AccessControl {
     /**
      * @notice This function will create admin and store it to adminUser list 
      * @param _newAddress : new adminUser's addresss
-     * @param _name : name of adminUser
     */
-    function addAdmin(address _newAddress, string calldata _name) external onlyRole(OWNER_ROLE) {
+    function addAdmin(address _newAddress) external onlyRole(OWNER_ROLE) {
         require (!hasRole(ADMIN_ROLE, _newAddress), 'This address already has admin role');
         require (!hasRole(CHARITY_ROLE, _newAddress), 'This address is in charity list');
         require (!hasRole(BLACK_ROLE, _newAddress), 'This address is in black list');
 
-        adminUsers.push(AdminStruct({
-            walletAddress: _newAddress,
-            name: _name
-        }));
+        adminUsers.push(_newAddress);
         _setupRole(ADMIN_ROLE, _newAddress);
-        emit AddAdmin(_newAddress, _name, block.timestamp);
+        emit AddAdmin(_newAddress, block.timestamp);
     }
 
     /**
@@ -253,7 +214,7 @@ contract DDAContract is AccessControl {
     function removeAdmin(uint _index) external onlyRole(OWNER_ROLE) {
         require (adminUsers.length > _index, 'That address is not existed!');
 
-        address userAddress = adminUsers[_index].walletAddress;
+        address userAddress = adminUsers[_index];
         require (!hasRole(OWNER_ROLE, userAddress), 'Owner can not be removed from admin list');
         uint i;
         for(i = _index + 1; i < adminUsers.length; i++) {
@@ -268,7 +229,7 @@ contract DDAContract is AccessControl {
         return charities;
     }
 
-    function getAdminUsers() public view returns (AdminStruct[] memory) {
+    function getAdminUsers() public view returns (address[] memory) {
         return adminUsers;
     }
 

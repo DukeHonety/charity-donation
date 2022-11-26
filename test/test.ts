@@ -30,7 +30,7 @@ describe("DDAContract Test network", () => {
       console.log("[TUSDT address] : ", tUsdtToken.address);
       console.log(
         "tusdtToken verify: ",
-        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network bscTestnet ${tUsdtToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TUSDT.sol:TUSDT" --network goerli ${tUsdtToken.address} ${deployer.address}`
       );
       await tUsdtToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether')); // 10000000000 ether
       
@@ -41,7 +41,7 @@ describe("DDAContract Test network", () => {
       console.log("[OKAPI address] : ", okapiToken.address);
       console.log(
         "okapiToken verify: ",
-        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network bscTestnet ${okapiToken.address} ${deployer.address}`
+        `npx hardhat verify --contract "contracts/TOKAPI.sol:TOKAPI" --network goerli ${okapiToken.address} ${deployer.address}`
       );
       await okapiToken.connect(deployer).mint(deployer.address, Web3.utils.toWei('1000000000000', 'ether'));
 
