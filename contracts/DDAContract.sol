@@ -2,6 +2,7 @@
 pragma solidity 0.8.14;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
@@ -15,7 +16,7 @@ interface IUniswapV2Pair {
     function token1() external view returns (address);
 }
 
-contract DDAContract is AccessControl {
+contract DDAContract is AccessControl, Ownable {
     
     enum CharityType {
         CHARITY,
@@ -41,7 +42,6 @@ contract DDAContract is AccessControl {
     address private immutable ETH_COMPARE_ADDRESS;
     AggregatorV3Interface  public immutable ETHUSD_PRICE_FEED;
 
-    bytes32 private constant OWNER_ROLE = keccak256("OWNER_ROLE");
     bytes32 private constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 private constant CHARITY_ROLE = keccak256("CHARITY_ROLE");
     bytes32 private constant BLACK_ROLE = keccak256("BLACK_ROLE");
@@ -96,8 +96,6 @@ contract DDAContract is AccessControl {
         ETHUSD_PRICE_FEED = AggregatorV3Interface(_ethUsdPriceAddress);
         WETH_ADDRESS = IUniswapV2Router02(SWAP_ROUTER_ADDRESS).WETH();
         ETH_COMPARE_ADDRESS = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-        _setupRole(OWNER_ROLE, _admin);
-        _setupRole(ADMIN_ROLE, _admin);
     }
 
     /**
@@ -164,7 +162,6 @@ contract DDAContract is AccessControl {
      * @param _catalog : information of charity [vip, website, name, email, country, summary, detail, photo, title, location]
     */
     function createCharity(Catalog calldata _catalog) external notBlackRole {
-        require (!hasRole(ADMIN_ROLE, msg.sender), "Current wallet is in admin list");
         require (!hasRole(CHARITY_ROLE, msg.sender), "Current wallet is in charity list");
         require (_catalog.goal > 0, 'Your goal of your fundraising can not be zero');
 
@@ -197,10 +194,8 @@ contract DDAContract is AccessControl {
      * @notice This function will create admin and store it to adminUser list 
      * @param _newAddress : new adminUser's addresss
     */
-    function addAdmin(address _newAddress) external onlyRole(OWNER_ROLE) {
+    function addAdmin(address _newAddress) external onlyOwner {
         require (!hasRole(ADMIN_ROLE, _newAddress), 'This address already has admin role');
-        require (!hasRole(CHARITY_ROLE, _newAddress), 'This address is in charity list');
-        require (!hasRole(BLACK_ROLE, _newAddress), 'This address is in black list');
 
         adminUsers.push(_newAddress);
         _setupRole(ADMIN_ROLE, _newAddress);
@@ -211,11 +206,10 @@ contract DDAContract is AccessControl {
      * @notice This function will remove ADMIN_ROLE of adminUser's selected index
      * @param _index: index of adminUser on adminUsers list
      */
-    function removeAdmin(uint _index) external onlyRole(OWNER_ROLE) {
+    function removeAdmin(uint _index) external onlyOwner {
         require (adminUsers.length > _index, 'That address is not existed!');
 
         address userAddress = adminUsers[_index];
-        require (!hasRole(OWNER_ROLE, userAddress), 'Owner can not be removed from admin list');
         uint i;
         for(i = _index + 1; i < adminUsers.length; i++) {
             adminUsers[i-1] = adminUsers[i];
@@ -262,5 +256,13 @@ contract DDAContract is AccessControl {
             return((amount*Res0)/Res1);
         else
             return((amount*Res1)/Res0);
+    }
+
+    function renounceRole(bytes32 role, address account) public override{
+        revert("disabled");
+    }
+
+    function renounceOwnership() public override{
+        revert("disabled");
     }
 }
