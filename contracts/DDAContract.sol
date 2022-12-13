@@ -228,23 +228,20 @@ contract DDAContract is AccessControl, Ownable {
     }
 
     function swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, address _to) public payable {
-        address[] memory path = new address[](2);
         if (_tokenIn == ETH_COMPARE_ADDRESS) {
+            address[] memory path = new address[](2);
             path[0] = WETH_ADDRESS;
             path[1] = _tokenOut;
+            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactETHForTokens{value: _amountIn}(_amountOutMin, path, _to, block.timestamp);
         }
         else {
+            address[] memory path = new address[](3);
             IERC20(_tokenIn).approve(SWAP_ROUTER_ADDRESS, _amountIn);
             path[0] = _tokenIn;
-            path[1] = _tokenOut;
-        }
-
-
-        if (_tokenIn == ETH_COMPARE_ADDRESS) {
-            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactETHForTokens{value: _amountIn}(_amountOutMin, path, _to, block.timestamp + 60);
-        }
-        else {
-            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp + 60);
+            path[1] = WETH_ADDRESS;
+            path[2] = _tokenOut;
+            IUniswapV2Router02(SWAP_ROUTER_ADDRESS).swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
+        
         }
     }
 

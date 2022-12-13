@@ -23,7 +23,7 @@ async function main() {
   // });
   console.log(
     "DDAContract verify:",
-    `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network goerli ${ddaContract.address} ${deployer.address} ${process.env.SWAP_ROUTER_ADDRESS} ${process.env.USDT_ADDRESS} ${process.env.OKAPI_ADDRESS} ${process.env.ETH_USD_PRICE_ADDRESS}`
+    `npx hardhat verify --contract "contracts/DDAContract.sol:DDAContract" --network mainnet ${ddaContract.address} ${deployer.address} ${process.env.SWAP_ROUTER_ADDRESS} ${process.env.USDT_ADDRESS} ${process.env.OKAPI_ADDRESS} ${process.env.ETH_USD_PRICE_ADDRESS}`
   );
 }
 
