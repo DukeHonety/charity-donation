@@ -73,8 +73,8 @@ const config: HardhatUserConfig = {
       accounts: [
         process.env.PRIVATE_KEY || ""
       ],
-      gas: 2100000,
-      gasPrice: 8000000000,
+      gas: 2300000,
+      gasPrice: 9000000000,
     },
     // bsc: {
     //   url: process.env.BSC_URL || "",
